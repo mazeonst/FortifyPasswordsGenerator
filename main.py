@@ -1,13 +1,16 @@
+# импортируем библиотеки для проекта
 import sys
 import random
 import string
 import pyperclip
 import os
 from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QLineEdit, QCheckBox, QScrollArea, QVBoxLayout, QDialog, QTextEdit, QInputDialog, QMessageBox, QSplitter, QTextBrowser, QHBoxLayout
+from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
 from cryptography.fernet import Fernet
 from win10toast import ToastNotifier
-from PyQt6 import QtCore
+
+
 # уведомления
 toast = ToastNotifier()
 
@@ -49,6 +52,8 @@ class PasswordDialog(QDialog):
 
         self.setFixedSize(200, 250)
 
+        self.setWindowIcon(QIcon('icon.png'))
+
         layout = QVBoxLayout()
         self.setWindowTitle("Пароль и данные")
         self.setStyleSheet("""
@@ -73,6 +78,7 @@ class PasswordDialog(QDialog):
         self.service_label = QLabel(f"Сервис: {self.password_data['service']}")
         layout.addWidget(self.service_label)
 
+        # кнопка "скопировать" для копирования паролей
         copy_button = QPushButton("Скопировать")
         copy_button.setStyleSheet("""
 
@@ -97,6 +103,7 @@ class PasswordDialog(QDialog):
         layout.addWidget(copy_button)
         copy_button.clicked.connect(self.copy_password)
 
+        # кнопка "сохранить", для сохранения пароля в текстовый документ
         save_button = QPushButton("Сохранить")
         save_button.setStyleSheet("""
 
@@ -123,6 +130,7 @@ class PasswordDialog(QDialog):
 
         self.encryption_key = encryption_key
 
+        # кнопка "зашифровать" для шифрования пароля
         encrypt_button = QPushButton("Зашифровать")
         encrypt_button.setStyleSheet("""
 
@@ -145,9 +153,9 @@ class PasswordDialog(QDialog):
         encrypt_button.pressed.connect(lambda: encrypt_button.setStyleSheet(encrypt_button_style_pressed))
         encrypt_button.released.connect(lambda: encrypt_button.setStyleSheet(encrypt_button_style_released))
         layout.addWidget(encrypt_button)
-        # QMessageBox.warning(self,"Внимание!", "При шифровании обязательно сохраните ключ безопасности в отдельный источник!")
         encrypt_button.clicked.connect(self.encrypt_password)
 
+        # кнопка для отображения ключа шифрования в интерфейсе программы
         show_key_button = QPushButton("Ключ шифрования")
         show_key_button.setStyleSheet("""
 
@@ -173,6 +181,7 @@ class PasswordDialog(QDialog):
         show_key_button.clicked.connect(self.show_encryption_key)
         self.setLayout(layout)
 
+
     def show_encryption_key(self):
         # Откройте окно с ключом шифрования
         key_display_dialog = KeyDisplayDialog(self.encryption_key)
@@ -192,6 +201,7 @@ class PasswordDialog(QDialog):
         encrypted_password = fernet.encrypt(password.encode())
         self.password_data["password"] = encrypted_password
         print("Пароль зашифрован и обновлен.")
+        # Отправляем уведомление
         send_notification("Пароль зашифрован", "Пароль успешно зашифрован!")
 
     def copy_password(self):
@@ -202,32 +212,31 @@ class PasswordDialog(QDialog):
         # Отправляем уведомление
         send_notification("Скопировано", "Пароль успешно скопирован в буфер обмена!")
 
+    # def save_password(self)Ж: позволяет пользователю ввести данные для сохранения пароля в текстовый документ
     def save_password(self):
         # Позволяет пользователю ввести имя сервиса (открывается окно)
         service_name, ok = QInputDialog.getText(self, "Сохранить пароль", "Введите имя сервиса:")
 
         if ok:
             self.password_data["service"] = service_name
-            # Здесь можно реализовать сохранение данных пароля и сервиса, например, в файл.
             print(f"Пароль для сервиса {service_name} сохранен.")
 
         login_name, ok = QInputDialog.getText(self, "Сохранить пароль", "Введите логин:")
 
         if ok:
             self.password_data["login"] = login_name
-            # Здесь можно реализовать сохранение данных пароля и сервиса, например, в файл.
             print(f"Пароль для сервиса {login_name} сохранен.")
 
         email_name, ok = QInputDialog.getText(self, "Сохранить пароль", "Введите почту:")
 
         if ok:
             self.password_data["email"] = email_name
-            # Здесь можно реализовать сохранение данных пароля и сервиса, например, в файл.
             print(f"Пароль для сервиса {email_name} сохранен.")
+            # Отправляем уведомление
             send_notification("Данные сохранены", "Пароль успешно сохранён!")
 
 
-# KeyDisplayDialog(QDialog): Диалоговое окно для отображения ключа шифрования.
+# KeyDisplayDialog(QDialog): Диалоговое окно для отображения ключа шифрования
 class KeyDisplayDialog(QDialog):
     def __init__(self, encryption_key):
         super().__init__()
@@ -238,6 +247,7 @@ class KeyDisplayDialog(QDialog):
                         background-color: #0e1621; 
                         color: #FFFFFF; 
                         font-weight: 900;
+                        border: none;
 
                     """)
         key_label = QLabel("Ваш ключ шифрования:")
@@ -256,11 +266,13 @@ class PasswordSaveDialog(QDialog):
 
         layout = QVBoxLayout()
         self.setWindowTitle("Сохраненные пароли и данные")
+        self.setWindowIcon(QIcon('icon.png'))
         self.setStyleSheet("""
 
                         background-color: #0e1621;
                         color: #FFFFFF; 
                         font-weight: 900;
+                        border: none;
 
                     """)
         self.passwords_and_data = passwords_and_data
@@ -296,29 +308,33 @@ class PasswordGeneratorApp(QWidget):
         dialog = DecryptDialog(self.encryption_key)
         dialog.exec()
 
+    # ключ шифрования сохраняется в файл
     def save_encryption_key(self):
         with open("encryption_key.key", "wb") as key_file:
             key_file.write(self.encryption_key)
         print("Ключ шифрования сохранен.")
 
+    # загружаем ключ шифрования в файл "encryption_key.key"
     def load_encryption_key(self):
         try:
             with open("encryption_key.key", "rb") as key_file:
                 self.encryption_key = key_file.read()
             print("Ключ шифрования загружен.")
         except FileNotFoundError:
-            self.save_encryption_key()  # Если ключ не найден, создайте новый ключ и сохраните его
+            self.save_encryption_key()
 
+    # шифрование пароля
     def encrypt_password(self, password):
         fernet = Fernet(self.encryption_key)
         encrypted_password = fernet.encrypt(password.encode())
         return encrypted_password
-
+    # расшифрование пароля
     def decrypt_password(self, encrypted_password):
         fernet = Fernet(self.encryption_key)
         decrypted_password = fernet.decrypt(encrypted_password).decode()
         return decrypted_password
 
+    # Основное окно приложения
     def initUI(self):
 
         left_layout = QVBoxLayout()
@@ -331,7 +347,7 @@ class PasswordGeneratorApp(QWidget):
 
                     """)
 
-        # num_passwords_input: Поле для ввода количества генерируемых паролей.
+        # num_passwords_input: Поле для ввода количества генерируемых паролей
         num_passwords_label = QLabel("Сколько паролей сгенерировать:")
         self.num_passwords_input = QLineEdit(self)
         left_layout.addWidget(num_passwords_label)
@@ -352,7 +368,7 @@ class PasswordGeneratorApp(QWidget):
 
                                         """)
 
-        # length_input: Поле для ввода длины пароля.
+        # length_input: Поле для ввода длины пароля
         length_label = QLabel("Введите длину пароля:")
         self.length_input = QLineEdit(self)
         left_layout.addWidget(length_label)
@@ -379,11 +395,11 @@ class PasswordGeneratorApp(QWidget):
         self.word_input.setStyleSheet(
             "text-decoration: none; border: none; padding: 2px 1px; font-size: 14px; background-color: #2b5378; color: #fff; border-radius: 5px; cursor: pointer; font-family: Calibri; font-weight: 900; border: 1px solid #507EA0")
 
-        # numbers_checkbox: Флажок для включения цифр в пароль.
+        # numbers_checkbox: Флажок для включения цифр в пароль
         self.numbers_checkbox = QCheckBox("Включать цифры в пароль?")
         left_layout.addWidget(self.numbers_checkbox)
 
-        # special_chars_checkbox: Флажок для включения специальных символов в пароль.
+        # special_chars_checkbox: Флажок для включения специальных символов в пароль
         self.special_chars_checkbox = QCheckBox("Включать специальные символы в пароль?")
         left_layout.addWidget(self.special_chars_checkbox)
 
@@ -393,7 +409,7 @@ class PasswordGeneratorApp(QWidget):
         self.use_lowercase_checkbox = QCheckBox("Использовать символы нижнего регистра?")
         left_layout.addWidget(self.use_lowercase_checkbox)
 
-        # generate_button: Кнопка для запуска генерации паролей.
+        # generate_button: Кнопка для запуска генерации паролей
         generate_button = QPushButton("Сгенерировать пароли")
         left_layout.addWidget(generate_button)
         generate_button.setStyleSheet("""
@@ -420,11 +436,11 @@ class PasswordGeneratorApp(QWidget):
 
         generate_button.clicked.connect(self.generate_passwords)
 
-        # Создайте виджет для левой части и установите для него вертикальный макет
+
         left_widget = QWidget()
         left_widget.setLayout(left_layout)
 
-        # Создайте разделитель между левой и правой частью
+        # разделитель между левой и правой частью
         splitter = QSplitter()
         splitter.addWidget(left_widget)
 
@@ -466,13 +482,13 @@ class PasswordGeneratorApp(QWidget):
         # Добавьте левую и правую части в разделитель
         splitter.addWidget(self.scroll_area)
 
-        # Создайте основный макет для приложения
+        # основный макет для приложения
         layout = QVBoxLayout()
         layout.addWidget(splitter)
         self.setLayout(layout)
 
         # Кнопка "Сохранить пароли и данные"
-        save_button = QPushButton("Сохраненные пароли")
+        save_button = QPushButton("Сгенерированные пароли")
         save_button.setStyleSheet("""
 
                                 text-decoration: none; 
@@ -575,37 +591,43 @@ class PasswordGeneratorApp(QWidget):
         left_layout.addLayout(buttons_container)
 
         self.setLayout(left_layout)
-        self.setWindowTitle("Генератор паролей")
+        self.setWindowTitle("fortify")
+        self.setWindowIcon(QIcon('icon.png'))
         self.setFixedSize(780, 440)
         self.show()
 
     def show_tips_window(self):
         dialog = QDialog(self)
         dialog.setWindowTitle("Советы по генерации пароля")
+        self.setWindowIcon(QIcon('icon.png'))
         dialog.setFixedSize(500, 400)
+
+
+        dialog.setStyleSheet("background-color: #0e1621; border: none")
 
         info_text = QTextBrowser(dialog)
         info_text.setOpenExternalLinks(True)
 
-        # Используем HTML для форматирования текста с заголовком и подзаголовком
+        # Используем HTML для форматирования текста
         info_text.setHtml("""
             <html>
             <head>
                 <style>
-                    h1 { font-size: 20px; color: #0070FF; font-weight: bold; }
-                    h2 { font-size: 16px; color: #0070FF; font-weight: bold; }
-                    p { font-size: 14px; }
+                    h1 { font-size: 20px; color: #FFF; font-weight: bold; }
+                    h2 { font-size: 16px; color: #FFF; font-weight: bold; }
+                    p { font-size: 14px; color: #FFF;}
+                    p1 { font-size: 14px; color: #1f91d5;}
                 </style>
             </head>
             <body>
-                <h1>Советы по генерации пароля</h1>
+                <h1>Советы по <p1>генерации пароля</p1></h1>
                 <h2>Общие принципы:</h2>
-                <p>1. Длину не менее 8 символов.</p>
-                <p>2. Различные типы символов, такие как буквы верхнего и нижнего регистра, цифры и специальные символы.</p>
-                <p>3. Не должен содержать личную информацию, такую как имя, дату рождения или номер телефона.</p>
-                <p>4. Не должен быть очевидным или легко угадываемым, например, последовательностью чисел или букв на клавиатуре.</p>
-                <p>5. Лучше использовать фразу или комбинацию слов, которые легко запоминаются, но сложны для взлома.</p>
-                <p>6. Регулярно менять пароль и не использовать один и тот же пароль для разных аккаунтов.</p>
+                <p>1. Длину не менее <p1>8</p1> символов.</p>
+                <p>2. Различные типы символов, такие как буквы <p1>верхнего</p1> и <p1>нижнего</p1> регистра, цифры и специальные символы.</p>
+                <p>3. Не должен содержать <p1>личную информацию</p1>, такую как: <p1>имя</p1>, <p1>дату рождения</p1> или <p1>номер телефона</p1>.</p>
+                <p>4. Не должен быть <p1>очевидным</p1> или легко угадываемым, например, <p1>последовательностью чисел</p1> или <p1>букв</p1> на клавиатуре.</p>
+                <p>5. Лучше использовать <p1>фразу</p1> или <p1>комбинацию слов</p1>, которые легко запоминаются, но сложны для взлома.</p>
+                <p>6. <p1>Регулярно менять пароль</p1> и не использовать один и тот же пароль для разных аккаунтов.</p>
             </body>
             </html>
         """)
@@ -618,39 +640,46 @@ class PasswordGeneratorApp(QWidget):
     def show_fortify_pass_info(self):
         dialog = QDialog(self)
         dialog.setWindowTitle("Возможности Fortify Pass")
-        dialog.setFixedSize(700, 560)
+        self.setWindowIcon(QIcon('icon.png'))
+        dialog.setFixedSize(700, 580)
+
+        dialog.setStyleSheet("background-color: #0e1621; border: none")
 
         info_text = QTextBrowser(dialog)
         info_text.setOpenExternalLinks(True)
-        info_text.setHtml("""
+        info_text.setHtml("""<
                     <html>
                     <head>
                         <style>
-                            h1 { font-size: 20px; color: #0070FF; font-weight: bold; }
-                            h2 { font-size: 14px; color: #0070FF; font-weight: bold; }
+                            h1 { font-size: 20px; color: #FFF; font-weight: bold; }
+                            h2 { font-size: 14px; color: #FFF; font-weight: bold; }
                             h3 { font-size: 18px; color: #FF0000; font-weight: bold; }
                             p { font-size: 12px; }
+                            h11 { font-size: 20px; color: #1f91d5; font-weight: bold; }
+                            h22 { font-size: 14px; color: #1f91d5; font-weight: bold; }
+                            p1 { font-size: 12px; color: #1f91d5;}
+                            p2 { font-size: 12px; color: #FF0000;}
                         </style>
                     </head>
                     <body>
-                        <h1>Возможности Fortify Pass</h1>
-                        <h2>1. Генерация сразу нескольких паролей.</h2>
-                        <h2>2. Генерация пароля заданной пользователем длины.</h2>
-                        <h2>3. Интеграция в пароль своих фраз, слов.</h2>
-                        <h2>4. Использование разных опций для генерации пароля, таких как:</h2>
-                        <p>1. Добавление цифр в пароль.</p>
-                        <p>2. Добавление специальных символов в пароль.</p>
-                        <p>3. Возможность выбора генерации символов разного регистра.</p>
-                        <h2>Так же "FortifyPass" умеет шифровать пароль, благодаря такой библиотеке, как "cryptography.fernet" .</h2>
-                        <p>1. При запуске программы автоматически загружается ключ шифрования в файл "encryption_key.key".</p>
-                        <h3>ВНИМАНИЕ!
-КЛЮЧ ШИФРОВАНИЯ ВАЖНО СОХРАНИТЬ В ОТДЕЛЬНЫЙ ИСТОЧНИК ИНАЧЕ ЕСТЬ ВЕРОЯТНОСТЬ ПОТЕРИ ВСЕХ ЗАШИФРОВАННЫХ ДАННЫХ!</h3>
-                        <p>2. В окне "пароль и данные" есть кнопка "зашифровать" после нажатия которой, пароль шифруется и записывается в файл "passwords.txt".</p>
-                        <p>3. На главном экране программы имеется кнопка "Расшифровать" после ее нажатия открывается окно "Расшифровать пароль" в котором благодаря ранее сохраненному ключу шифрования вы можете расшифровать данные</p>
+                        <h1>Возможности <h11>Fortify Pass</h11></h1>
+                        <h2>1. Генерация сразу <h22>нескольких паролей.</h22></h2>
+                        <h2>2. Генерация пароля <h22>заданной пользователем длины.</h22></h2>
+                        <h2>3. Интеграция в пароль своих <h22>фраз, слов.</h22></h2>
+                        <h2>4. Использование разных <h22>опций</h22> для генерации пароля, таких как:</h2>
+                        <p>1. Добавление <p1>цифр</p1> в пароль.</p>
+                        <p>2. Добавление <p1>специальных символов</p1> в пароль.</p>
+                        <p>3. Возможность выбора генерации символов <p1>разного регистра</p1>.</p>
+                        <h2>Так же <h22>"FortifyPass"</h22> умеет шифровать пароль, благодаря такой библиотеке, как <h22>"cryptography.fernet"</h22></h2>
+                        <p>1. При запуске программы автоматически загружается ключ шифрования в файл <p1>"encryption_key.key"</p1></p>
+                        <h3><b>ВНИМАНИЕ!
+КЛЮЧ ШИФРОВАНИЯ ВАЖНО СОХРАНИТЬ В ОТДЕЛЬНЫЙ ИСТОЧНИК ИНАЧЕ ЕСТЬ ВЕРОЯТНОСТЬ ПОТЕРИ ВСЕХ ЗАШИФРОВАННЫХ ДАННЫХ!</b></h3>
+                        <p>2. В окне <p1>"пароль и данные"</p1> есть кнопка <p1>"зашифровать"</p1> после нажатия которой, пароль шифруется и записывается в файл <p1>"passwords.txt"</p1>. <p2>Внимание</p2>, если вы хотите <p1>скопировать зашифрованный текст</p1> скопировать нужно текст в <p1>ковычках</p1>, например: b'<p2>Hello World</p2>'</p>
+                        <p>3. На главном экране программы имеется кнопка <p1>"Расшифровать"</p1> после ее нажатия открывается окно <p1>"Расшифровать пароль"</p1> в котором благодаря ранее сохраненному ключу шифрования вы можете расшифровать данные</p>
                     </body>
                     </html>
                 """)
-        info_text.setGeometry(10, 10, 680, 540)
+        info_text.setGeometry(10, 10, 680, 560)
 
         dialog.exec()
 
@@ -659,9 +688,9 @@ class PasswordGeneratorApp(QWidget):
         # Получите значения параметров
         num_passwords_text = self.num_passwords_input.text()
         length_text = self.length_input.text()
-        user_word = self.word_input.text()  # Получите введенное пользователем слово
+        user_word = self.word_input.text()
 
-        # Проверьте, что пользователь ввел числа для количества паролей и длины
+
         if not num_passwords_text or not length_text:
             QMessageBox.critical(self, "Ошибка", "Пожалуйста, введите количество паролей и длину!")
             return
@@ -763,13 +792,14 @@ class PasswordGeneratorApp(QWidget):
             pass
         return passwords_and_data
 
-
+# DecryptDialog(QDialog): Класс для окна расшифровки пароля
 class DecryptDialog(QDialog):
     def __init__(self, encryption_key):
         super().__init__()
 
         layout = QVBoxLayout()
         self.setWindowTitle("Расшифровать пароль")
+        self.setWindowIcon(QIcon('icon.png'))
         self.setStyleSheet("""
                            background-color: #0e1621; 
                            color: #FFFFFF; 
@@ -831,6 +861,10 @@ class DecryptDialog(QDialog):
                                      font-weight: 900; 
                                      border: 2px solid #507EA0
                                     """)
+        decrypt_button_style_pressed = "text-decoration: none; border: none; padding: 5px 1px; font-size: 16px; background-color: #0070FF; color: #fff; border-radius: 5px; cursor: pointer; font-family: Calibri; font-weight: 900; border: 2px solid #005CD2; background-color: #74C5FF;"
+        decrypt_button_style_released = "text-decoration: none; border: none; padding: 5px 1px; font-size: 16px; background-color: #0070FF; color: #fff; border-radius: 5px; cursor: pointer; font-family: Calibri; font-weight: 900; border: 2px solid #005CD2;"
+        decrypt_button.pressed.connect(lambda: decrypt_button.setStyleSheet(decrypt_button_style_pressed))
+        decrypt_button.released.connect(lambda: decrypt_button.setStyleSheet(decrypt_button_style_released))
         decrypt_button.clicked.connect(self.decrypt_text)
 
         self.setLayout(layout)
@@ -843,8 +877,7 @@ class DecryptDialog(QDialog):
             decrypted_text = fernet.decrypt(encrypted_text.encode()).decode()
             QMessageBox.information(self, "Расшифрованный текст", f"Расшифрованный текст: {decrypted_text}")
         except Exception as e:
-            QMessageBox.critical(self, "Ошибка",
-                                 "Не удалось расшифровать текст. Убедитесь, что ключ и зашифрованный текст верны.")
+            QMessageBox.critical(self, "Ошибка", "Не удалось расшифровать текст. Убедитесь, что ключ и зашифрованный текст верны.")
 
 
 # В if __name__ == '__main__': блоке приложение и главное окно ex создаются, и производится загрузка ранее сохраненных паролей из файла.
