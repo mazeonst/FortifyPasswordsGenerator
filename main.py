@@ -205,7 +205,7 @@ class PasswordDialog(QDialog):
         fernet = Fernet(self.encryption_key)
         encrypted_password = fernet.encrypt(password.encode()).decode()  # Декодирование в строку
         self.password_data["password"] = encrypted_password
-        self.is_encrypted = True  # Установите флаг после успешного шифрования
+        self.is_encrypted = True  
         print("Пароль зашифрован и обновлен.")
         # Отправляем уведомление
         send_notification("Пароль зашифрован", "Пароль успешно зашифрован!")
@@ -769,7 +769,7 @@ class PasswordGeneratorApp(QWidget):
 
     # save_passwords(): Метод для открытия диалогового окна для сохранения паролей и данных.
     def save_passwords(self):
-        # Check if passwords have been generated
+        
         if not self.passwords_generated:
             QMessageBox.critical(self, "Ошибка", "Сначала сгенерируйте пароли!")
             return
