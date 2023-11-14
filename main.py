@@ -10,7 +10,6 @@ from PyQt6.QtCore import Qt
 from cryptography.fernet import Fernet
 from win10toast import ToastNotifier
 
-
 # уведомления
 toast = ToastNotifier()
 
@@ -51,6 +50,8 @@ class PasswordDialog(QDialog):
         super().__init__()
 
         self.setFixedSize(200, 250)
+
+        self.is_encrypted = False
 
         self.setWindowIcon(QIcon('icon.png'))
 
@@ -181,7 +182,6 @@ class PasswordDialog(QDialog):
         show_key_button.clicked.connect(self.show_encryption_key)
         self.setLayout(layout)
 
-
     def show_encryption_key(self):
         # Откройте окно с ключом шифрования
         key_display_dialog = KeyDisplayDialog(self.encryption_key)
@@ -196,10 +196,16 @@ class PasswordDialog(QDialog):
         send_notification("Пароль зашифрован", "Пароль успешно зашифрован!")
 
     def encrypt_password(self):
+        # Проверка, был ли пароль уже зашифрован
+        if self.is_encrypted:
+            QMessageBox.warning(self, "Предупреждение", "Пароль уже зашифрован.")
+            return
+
         password = self.password_data["password"]
         fernet = Fernet(self.encryption_key)
-        encrypted_password = fernet.encrypt(password.encode())
+        encrypted_password = fernet.encrypt(password.encode()).decode()  # Декодирование в строку
         self.password_data["password"] = encrypted_password
+        self.is_encrypted = True  # Установите флаг после успешного шифрования
         print("Пароль зашифрован и обновлен.")
         # Отправляем уведомление
         send_notification("Пароль зашифрован", "Пароль успешно зашифрован!")
@@ -301,6 +307,7 @@ class PasswordGeneratorApp(QWidget):
         self.use_numbers = False
         self.use_special_chars = False
         self.passwords_and_data = []
+        self.passwords_generated = False
         self.encryption_key = Fernet.generate_key()
         self.initUI()
 
@@ -318,7 +325,7 @@ class PasswordGeneratorApp(QWidget):
     def load_encryption_key(self):
         try:
             with open("encryption_key.key", "rb") as key_file:
-                self.encryption_key = key_file.read()
+                self.encryption_key = key_file.read().decode()
             print("Ключ шифрования загружен.")
         except FileNotFoundError:
             self.save_encryption_key()
@@ -328,6 +335,7 @@ class PasswordGeneratorApp(QWidget):
         fernet = Fernet(self.encryption_key)
         encrypted_password = fernet.encrypt(password.encode())
         return encrypted_password
+
     # расшифрование пароля
     def decrypt_password(self, encrypted_password):
         fernet = Fernet(self.encryption_key)
@@ -436,7 +444,6 @@ class PasswordGeneratorApp(QWidget):
 
         generate_button.clicked.connect(self.generate_passwords)
 
-
         left_widget = QWidget()
         left_widget.setLayout(left_layout)
 
@@ -513,6 +520,7 @@ class PasswordGeneratorApp(QWidget):
         save_button.clicked.connect(self.save_passwords)
         left_layout.addWidget(save_button)
 
+
         decrypt_button = QPushButton("Расшифровать")
         left_layout.addWidget(decrypt_button)
         decrypt_button.setStyleSheet("""
@@ -537,7 +545,6 @@ class PasswordGeneratorApp(QWidget):
         decrypt_button.pressed.connect(lambda: decrypt_button.setStyleSheet(decrypt_button_style_pressed))
         decrypt_button.released.connect(lambda: decrypt_button.setStyleSheet(decrypt_button_style_released))
         decrypt_button.clicked.connect(self.open_decrypt_dialog)
-
 
         buttons_container = QHBoxLayout()
 
@@ -601,7 +608,6 @@ class PasswordGeneratorApp(QWidget):
         dialog.setWindowTitle("Советы по генерации пароля")
         self.setWindowIcon(QIcon('icon.png'))
         dialog.setFixedSize(500, 400)
-
 
         dialog.setStyleSheet("background-color: #0e1621; border: none")
 
@@ -674,8 +680,9 @@ class PasswordGeneratorApp(QWidget):
                         <p>1. При запуске программы автоматически загружается ключ шифрования в файл <p1>"encryption_key.key"</p1></p>
                         <h3><b>ВНИМАНИЕ!
 КЛЮЧ ШИФРОВАНИЯ ВАЖНО СОХРАНИТЬ В ОТДЕЛЬНЫЙ ИСТОЧНИК ИНАЧЕ ЕСТЬ ВЕРОЯТНОСТЬ ПОТЕРИ ВСЕХ ЗАШИФРОВАННЫХ ДАННЫХ!</b></h3>
-                        <p>2. В окне <p1>"пароль и данные"</p1> есть кнопка <p1>"зашифровать"</p1> после нажатия которой, пароль шифруется и записывается в файл <p1>"passwords.txt"</p1>. <p2>Внимание</p2>, если вы хотите <p1>скопировать зашифрованный текст</p1> скопировать нужно текст в <p1>ковычках</p1>, например: b'<p2>Hello World</p2>'</p>
+                        <p>2. В окне <p1>"пароль и данные"</p1> есть кнопка <p1>"зашифровать"</p1> после нажатия которой, пароль шифруется и записывается в файл <p1>"passwords.txt"</p1>. 
                         <p>3. На главном экране программы имеется кнопка <p1>"Расшифровать"</p1> после ее нажатия открывается окно <p1>"Расшифровать пароль"</p1> в котором благодаря ранее сохраненному ключу шифрования вы можете расшифровать данные</p>
+                        <p><center>©Michael Mirmikov</center></p>
                     </body>
                     </html>
                 """)
@@ -685,11 +692,20 @@ class PasswordGeneratorApp(QWidget):
 
     # generate_passwords(): Метод для генерации паролей на основе введенных настроек.
     def generate_passwords(self):
+
+        if not self.num_passwords_input.text() or not self.length_input.text():
+            QMessageBox.critical(self, "Ошибка", "Пожалуйста, выберите все параметры перед генерацией паролей.")
+            return
+
         # Получите значения параметров
         num_passwords_text = self.num_passwords_input.text()
         length_text = self.length_input.text()
         user_word = self.word_input.text()
 
+        # Проверьте, что пользователь ввел числа для количества паролей и длины
+        if not num_passwords_text.isdigit() or not length_text.isdigit():
+            QMessageBox.critical(self, "Ошибка", "Пожалуйста, введите корректные значения для количества паролей и длины!")
+            return
 
         if not num_passwords_text or not length_text:
             QMessageBox.critical(self, "Ошибка", "Пожалуйста, введите количество паролей и длину!")
@@ -701,6 +717,8 @@ class PasswordGeneratorApp(QWidget):
         self.use_special_chars = self.special_chars_checkbox.isChecked()
         self.use_uppercase = self.use_uppercase_checkbox.isChecked()
         self.use_lowercase = self.use_lowercase_checkbox.isChecked()
+        self.passwords_generated = True
+
 
         if not self.use_numbers and not self.use_special_chars and not self.use_uppercase and not self.use_lowercase:
             QMessageBox.warning(self, "Внимание", "Пожалуйста, установите хотя бы одну опцию для генерации паролей!")
@@ -751,6 +769,11 @@ class PasswordGeneratorApp(QWidget):
 
     # save_passwords(): Метод для открытия диалогового окна для сохранения паролей и данных.
     def save_passwords(self):
+        # Check if passwords have been generated
+        if not self.passwords_generated:
+            QMessageBox.critical(self, "Ошибка", "Сначала сгенерируйте пароли!")
+            return
+
         save_dialog = PasswordSaveDialog(self.passwords_and_data)
         save_dialog.exec()
 
@@ -791,6 +814,7 @@ class PasswordGeneratorApp(QWidget):
         except FileNotFoundError:
             pass
         return passwords_and_data
+
 
 # DecryptDialog(QDialog): Класс для окна расшифровки пароля
 class DecryptDialog(QDialog):
@@ -877,7 +901,8 @@ class DecryptDialog(QDialog):
             decrypted_text = fernet.decrypt(encrypted_text.encode()).decode()
             QMessageBox.information(self, "Расшифрованный текст", f"Расшифрованный текст: {decrypted_text}")
         except Exception as e:
-            QMessageBox.critical(self, "Ошибка", "Не удалось расшифровать текст. Убедитесь, что ключ и зашифрованный текст верны.")
+            QMessageBox.critical(self, "Ошибка",
+                                 "Не удалось расшифровать текст. Убедитесь, что ключ и зашифрованный текст верны.")
 
 
 # В if __name__ == '__main__': блоке приложение и главное окно ex создаются, и производится загрузка ранее сохраненных паролей из файла.
