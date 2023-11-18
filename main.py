@@ -23,14 +23,13 @@ def send_notification(title, message):
     :param duration: Продолжительность видимости сообщения
     :param threaded: Этот параметр позволяет отображать уведомление справа
     '''
-    
+
     toast.show_toast(
         title=title,
         msg=message,
         duration=5,
         threaded=True
     )
-
 
  
 def generate_password(length, use_numbers=False, use_special_chars=False, use_uppercase=True, use_lowercase=True,
@@ -63,8 +62,12 @@ def generate_password(length, use_numbers=False, use_special_chars=False, use_up
     return password
 
 
-# PasswordDialog(QDialog): Диалоговое окно для отображения сгенерированного пароля и связанных с ним данных.
 class PasswordDialog(QDialog):
+
+    '''
+    Диалоговое окно для отображения сгенерированного пароля и связанных с ним данных.
+    '''
+
     def __init__(self, password_data, encryption_key):
         super().__init__()
 
