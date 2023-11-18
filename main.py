@@ -14,13 +14,19 @@ from win10toast import ToastNotifier
 toast = ToastNotifier()
 
 
-# Функция для отправки уведомления
 def send_notification(title, message):
+    '''
+    Функция для отправки уведомления через центр уведомлений виндовс
+    :param title: Заголовок уведомления
+    :param message: Тело сообщения
+    :param duration: Продолжительность видимости сообщения
+    :param threaded: Этот параметр позволяет отображать уведомление справа
+    '''
     toast.show_toast(
         title=title,
         msg=message,
         duration=5,
-        threaded=True  # Этот параметр позволяет отображать уведомление справа
+        threaded=True
     )
 
 
