@@ -15,6 +15,7 @@ toast = ToastNotifier()
 
 
 def send_notification(title, message):
+    
     '''
     Функция для отправки уведомления через центр уведомлений виндовс
     :param title: Заголовок уведомления
@@ -22,6 +23,7 @@ def send_notification(title, message):
     :param duration: Продолжительность видимости сообщения
     :param threaded: Этот параметр позволяет отображать уведомление справа
     '''
+    
     toast.show_toast(
         title=title,
         msg=message,
@@ -30,9 +32,20 @@ def send_notification(title, message):
     )
 
 
-# generate_password(length, use_numbers, use_special_chars): Функция, которая генерирует случайный пароль указанной длины с учетом опций, таких как использование цифр и специальных символов.
+ 
 def generate_password(length, use_numbers=False, use_special_chars=False, use_uppercase=True, use_lowercase=True,
                       user_word=""):
+    
+    '''
+    Функция, которая генерирует случайный пароль указанной длины.
+    :param length: Длинна пароля.
+    :param use_numbers: Использовать буквы латинского алфавита?
+    :param use_special_chars: Использовать специальные символы #$%&'()*+,-./:;<=>?@[\]^_`{|}~
+    :param use_uppercase: Использовать символы верхнего регистра?
+    :param use_lowercase: Использовать символы нижнего регистра?
+    :param user_word: Добавить в начало пароля слово, введенное в ручную?
+    '''
+
     characters = ''
     if use_uppercase:
         characters += string.ascii_uppercase
