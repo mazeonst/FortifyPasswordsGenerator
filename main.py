@@ -20,7 +20,7 @@ def send_notification(title, message):
         title=title,
         msg=message,
         duration=5,
-        threaded=True  # Этот параметр позволяет отображать уведомление справа
+        threaded=True,  # Этот параметр позволяет отображать уведомление справа
     )
 
 
@@ -68,6 +68,7 @@ class PasswordDialog(QDialog):
         self.password_data = password_data
 
         self.password_label = QLabel(f"Пароль: {self.password_data['password']}")
+        self.check_password_strength()
         layout.addWidget(self.password_label)
 
         self.email_label = QLabel(f"Почта: {self.password_data['email']}")
@@ -182,6 +183,27 @@ class PasswordDialog(QDialog):
         show_key_button.clicked.connect(self.show_encryption_key)
         self.setLayout(layout)
 
+    def check_password_strength(self):
+        # Проверка характеристик пароля и подсветка соответствующего цвета
+        password = self.password_data['password']
+
+        # Обновленные критерии проверки
+        is_good_password = (
+                len(password) >= 12 and
+                any(char.isupper() for char in password) and
+                any(char.islower() for char in password) and
+                any(char in string.punctuation for char in password) and
+                not any(phrase.lower() in password.lower() for phrase in ["QWERTY", "qwerty", "PASSWORD", "password", "1234", "12345678", "MONKEY", "monkey", "111111", "ytrewq", "YTREWQ", "passw0rd", "PASSW0RD", "1QAZ2WSX", "1qaz2wsx", "1q2w3e4r", "1Q2W3E4R", "qwe123", "letmein", "admin", "abc123", "iloveyou", "sunshine", "princess", "football", "baseball", "superman", "batman", "starwars", "pokemon", "dragon", "hello123", "welcome1", "samantha", "charlie1", "chocolate", "123abc", "iloveme", "password", "qwerty", "123456", "letmeout", "letmein123", "admin123", "iloveyou123", "sunshine123", "princess123", "football123", "baseball123", "superman123", "batman123", "starwars123", "pokemon123", "dragon123", "hello1234", "welcome123", "samantha123", "charlie123", "chocolate123", "123abc456", "iloveme123", "password123", "qwerty123", "123456789", "letmein", "admin", "iloveyou", "sunshine", "princess", "football", "baseball", "superman", "batman", "starwars", "pokemon", "dragon", "hello", "welcome", "samantha", "charlie", "chocolate", "abc123", "iloveme"])
+        )
+
+        # Установка подсвеченного пароля в метку
+        if is_good_password:
+            styled_password = f"<font color='green'>{password}</font>"
+        else:
+            styled_password = f"<font color='red'>{password}</font>"
+
+        self.password_label.setText(f"Пароль: {styled_password}")
+
     def show_encryption_key(self):
         # Откройте окно с ключом шифрования
         key_display_dialog = KeyDisplayDialog(self.encryption_key)
@@ -205,7 +227,7 @@ class PasswordDialog(QDialog):
         fernet = Fernet(self.encryption_key)
         encrypted_password = fernet.encrypt(password.encode()).decode()  # Декодирование в строку
         self.password_data["password"] = encrypted_password
-        self.is_encrypted = True  
+        self.is_encrypted = True  # Установите флаг после успешного шифрования
         print("Пароль зашифрован и обновлен.")
         # Отправляем уведомление
         send_notification("Пароль зашифрован", "Пароль успешно зашифрован!")
@@ -769,7 +791,7 @@ class PasswordGeneratorApp(QWidget):
 
     # save_passwords(): Метод для открытия диалогового окна для сохранения паролей и данных.
     def save_passwords(self):
-        
+        # Check if passwords have been generated
         if not self.passwords_generated:
             QMessageBox.critical(self, "Ошибка", "Сначала сгенерируйте пароли!")
             return
