@@ -3,7 +3,7 @@
 ## Available for Desktop
 
 <p align="center">
-  <img src = "https://github.com/mazeonst/Fortifypasswordsgenerator/blob/main/images/fortifypresent.png?raw=true" width=100>
+  <img src = "https://github.com/mazeonst/Fortifypasswordsgenerator/blob/main/images/fortifypresent.png?raw=true" width=1000>
 </p>
 
 <p align="center">
