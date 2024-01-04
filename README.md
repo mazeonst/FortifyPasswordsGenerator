@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src = "https://github.com/mazeonst/Fortifypasswordsgenerator/blob/main/images/%D0%9C%D0%BE%D0%BA%D0%B0%D0%BF%20%D0%9D%D0%BE%D1%83%D1%82%D0%B1%D1%83%D0%BA%D0%B0.png?raw=true" width=350>
+  <img src = "https://github.com/mazeonst/Fortifypasswordsgenerator/blob/main/images/%D0%9C%D0%BE%D0%BA%D0%B0%D0%BF%20%D0%9D%D0%BE%D1%83%D1%82%D0%B1%D1%83%D0%BA%D0%B0.png?raw=true" width=1000>
 </p>
 
 ## Возможности Fortify Pass
