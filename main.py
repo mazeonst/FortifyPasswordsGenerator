@@ -692,6 +692,19 @@ class PasswordGeneratorApp(QWidget):
 
     # generate_passwords(): Метод для генерации паролей на основе введенных настроек.
     def generate_passwords(self):
+        num_passwords = int(self.num_passwords_input.text())
+        password_length = int(self.length_input.text())
+
+        # Проверка, если пользователь пытается сгенерировать 600 или более паролей и каждый пароль состоит из 1000 или более символов
+        if num_passwords >= 600 and password_length >= 1000:
+            reply = QMessageBox.warning(
+                self,
+                "Предупреждение",
+                "Генерация такого большого количества длинных паролей может сильно нагрузить ваше устройство. Вы уверены, что хотите продолжить?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            )
+            if reply == QMessageBox.StandardButton.No:
+                return
 
         if not self.num_passwords_input.text() or not self.length_input.text():
             QMessageBox.critical(self, "Ошибка", "Пожалуйста, выберите все параметры перед генерацией паролей.")
