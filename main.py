@@ -1,10 +1,18 @@
-# импортируем библиотеки для проекта
+# Fortify
+# Профессиональный генератор паролей, включающий в себя множество опций для генерации пароля
+# GitHub: https://github.com/mazeonst/FortifyPasswordsGenerator
+# Version:
+# Developer: Michael Mirmikov
+# Telegram: @mazeonst
+# Email: mirmikovmisa@gmail.com
+
 import sys
 import random
 import string
 import pyperclip
 import os
-from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QLineEdit, QCheckBox, QScrollArea, QVBoxLayout, QDialog, QTextEdit, QInputDialog, QMessageBox, QSplitter, QTextBrowser, QHBoxLayout
+from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QLineEdit, QCheckBox, QScrollArea, QVBoxLayout, \
+    QDialog, QTextEdit, QInputDialog, QMessageBox, QSplitter, QTextBrowser, QHBoxLayout
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
 from cryptography.fernet import Fernet
@@ -16,6 +24,14 @@ toast = ToastNotifier()
 
 # Функция для отправки уведомления
 def send_notification(title, message):
+    '''
+    Функция для отправки уведомления через центр уведомлений Windows
+    :param title: Заголовок уведомления
+    :param message: Тело сообщения
+    :param duration: Продолжительность видимости сообщения
+    :param threaded: Этот параметр позволяет отображать уведомление справа
+    '''
+
     toast.show_toast(
         title=title,
         msg=message,
@@ -24,9 +40,18 @@ def send_notification(title, message):
     )
 
 
-# generate_password(length, use_numbers, use_special_chars): Функция, которая генерирует случайный пароль указанной длины с учетом опций, таких как использование цифр и специальных символов.
 def generate_password(length, use_numbers=False, use_special_chars=False, use_uppercase=True, use_lowercase=True,
                       user_word=""):
+    '''
+    Функция, которая генерирует случайный пароль указанной длины.
+    :param length: Длинна пароля.
+    :param use_numbers: Использовать буквы латинского алфавита?
+    :param use_special_chars: Использовать специальные символы #$%&'()*+,-./:;<=>?@[\]^_`{|}~
+    :param use_uppercase: Использовать символы верхнего регистра?
+    :param use_lowercase: Использовать символы нижнего регистра?
+    :param user_word: Добавить в начало пароля слово, введенное в ручную?
+    '''
+
     characters = ''
     if use_uppercase:
         characters += string.ascii_uppercase
@@ -47,6 +72,13 @@ def generate_password(length, use_numbers=False, use_special_chars=False, use_up
 # PasswordDialog(QDialog): Диалоговое окно для отображения сгенерированного пароля и связанных с ним данных.
 class PasswordDialog(QDialog):
     def __init__(self, password_data, encryption_key):
+        """
+        Конструктор класса PasswordDialog.
+
+        Parameters:
+            password_data (dict): Словарь с данными пароля.
+            encryption_key (str): Ключ шифрования для зашифровки пароля.
+        """
         super().__init__()
 
         self.setFixedSize(200, 250)
@@ -183,19 +215,16 @@ class PasswordDialog(QDialog):
         self.setLayout(layout)
 
     def show_encryption_key(self):
-        # Откройте окно с ключом шифрования
+        """
+        Метод для отображения окна с ключом шифрования.
+        """
         key_display_dialog = KeyDisplayDialog(self.encryption_key)
         key_display_dialog.exec()
 
     def encrypt_password(self):
-        password = self.password_data["password"]
-        encrypted_password = self.encryption_key.encrypt_password(password)
-        self.password_data["password"] = encrypted_password
-        print("Пароль зашифрован и обновлен.")
-        # Отправляем уведомление
-        send_notification("Пароль зашифрован", "Пароль успешно зашифрован!")
-
-    def encrypt_password(self):
+        """
+        Метод для шифрования пароля и обновления данных.
+        """
         # Проверка, был ли пароль уже зашифрован
         if self.is_encrypted:
             QMessageBox.warning(self, "Предупреждение", "Пароль уже зашифрован.")
@@ -211,6 +240,9 @@ class PasswordDialog(QDialog):
         send_notification("Пароль зашифрован", "Пароль успешно зашифрован!")
 
     def copy_password(self):
+        """
+        Метод для копирования пароля в буфер обмена и отправки уведомления.
+        """
         password = self.password_label.text().split(": ")[1]
         pyperclip.copy(password)
         print(f"Пароль скопирован в буфер обмена: {password}")
@@ -220,6 +252,9 @@ class PasswordDialog(QDialog):
 
     # def save_password(self)Ж: позволяет пользователю ввести данные для сохранения пароля в текстовый документ
     def save_password(self):
+        """
+        Метод для сохранения пароля в текстовый документ и отправки уведомления.
+        """
         # Позволяет пользователю ввести имя сервиса (открывается окно)
         service_name, ok = QInputDialog.getText(self, "Сохранить пароль", "Введите имя сервиса:")
 
@@ -245,8 +280,15 @@ class PasswordDialog(QDialog):
 # KeyDisplayDialog(QDialog): Диалоговое окно для отображения ключа шифрования
 class KeyDisplayDialog(QDialog):
     def __init__(self, encryption_key):
+        """
+        Конструктор класса KeyDisplayDialog.
+
+        Parameters:
+            encryption_key (str): Ключ шифрования для отображения.
+        """
         super().__init__()
         self.setWindowTitle("Ключ шифрования")
+        self.setWindowIcon(QIcon('icon.png'))
         layout = QVBoxLayout()
         self.setStyleSheet("""
 
@@ -268,6 +310,12 @@ class KeyDisplayDialog(QDialog):
 # PasswordSaveDialog(QDialog): Диалоговое окно для отображения сохраненных паролей и связанных с ними данных.
 class PasswordSaveDialog(QDialog):
     def __init__(self, passwords_and_data):
+        """
+        Конструктор класса PasswordSaveDialog.
+
+        Parameters:
+            passwords_and_data (list): Список словарей с сохраненными паролями и связанными данными.
+        """
         super().__init__()
 
         layout = QVBoxLayout()
@@ -299,6 +347,21 @@ class PasswordSaveDialog(QDialog):
 
 # PasswordGeneratorApp(QWidget): Главное окно приложения, в котором пользователь может настроить и генерировать пароли.
 class PasswordGeneratorApp(QWidget):
+    """
+        Конструктор класса PasswordGeneratorApp.
+
+        Инициализирует основные переменные и создает главное окно приложения.
+
+        Attributes:
+        - num_passwords (int): Количество генерируемых паролей.
+        - length (int): Длина генерируемых паролей.
+        - use_numbers (bool): Флаг использования цифр в паролях.
+        - use_special_chars (bool): Флаг использования специальных символов в паролях.
+        - passwords_and_data (list): Список сгенерированных паролей и связанных данных.
+        - passwords_generated (bool): Флаг, указывающий, были ли сгенерированы пароли.
+        - encryption_key (str): Ключ шифрования для использования в Fernet.
+        """
+
     def __init__(self):
         super().__init__()
 
@@ -312,17 +375,25 @@ class PasswordGeneratorApp(QWidget):
         self.initUI()
 
     def open_decrypt_dialog(self):
+        """
+        Метод для открытия диалогового окна расшифровки.
+        """
         dialog = DecryptDialog(self.encryption_key)
         dialog.exec()
 
-    # ключ шифрования сохраняется в файл
     def save_encryption_key(self):
+        """
+        Метод для сохранения ключа шифрования в файл.
+        """
         with open("encryption_key.key", "wb") as key_file:
             key_file.write(self.encryption_key)
         print("Ключ шифрования сохранен.")
 
-    # загружаем ключ шифрования в файл "encryption_key.key"
     def load_encryption_key(self):
+        """
+        Метод для загрузки ключа шифрования из файла.
+        Если файл не найден, создает новый ключ и сохраняет его.
+        """
         try:
             with open("encryption_key.key", "rb") as key_file:
                 self.encryption_key = key_file.read().decode()
@@ -330,14 +401,30 @@ class PasswordGeneratorApp(QWidget):
         except FileNotFoundError:
             self.save_encryption_key()
 
-    # шифрование пароля
     def encrypt_password(self, password):
+        """
+        Метод для шифрования пароля.
+
+        Parameters:
+            password (str): Пароль для шифрования.
+
+        Returns:
+            bytes: Зашифрованный пароль в виде байтов.
+        """
         fernet = Fernet(self.encryption_key)
         encrypted_password = fernet.encrypt(password.encode())
         return encrypted_password
 
-    # расшифрование пароля
     def decrypt_password(self, encrypted_password):
+        """
+        Метод для расшифровки пароля.
+
+        Parameters:
+            encrypted_password (bytes): Зашифрованный пароль в виде байтов.
+
+        Returns:
+            str: Расшифрованный пароль в виде строки.
+        """
         fernet = Fernet(self.encryption_key)
         decrypted_password = fernet.decrypt(encrypted_password).decode()
         return decrypted_password
@@ -393,7 +480,7 @@ class PasswordGeneratorApp(QWidget):
                                         cursor: pointer; 
                                         font-family: Calibri; 
                                         font-weight: 900; 
-                                        border: 1px solid #507EA0
+                                        border: 1px solid #507EA0;
 
                                     """)
 
@@ -519,7 +606,6 @@ class PasswordGeneratorApp(QWidget):
         save_button.released.connect(lambda: save_button.setStyleSheet(save_button_style_released))
         save_button.clicked.connect(self.save_passwords)
         left_layout.addWidget(save_button)
-
 
         decrypt_button = QPushButton("Расшифровать")
         left_layout.addWidget(decrypt_button)
@@ -692,19 +778,14 @@ class PasswordGeneratorApp(QWidget):
 
     # generate_passwords(): Метод для генерации паролей на основе введенных настроек.
     def generate_passwords(self):
-        num_passwords = int(self.num_passwords_input.text())
-        password_length = int(self.length_input.text())
+        """
+        Метод для генерации паролей на основе введенных настроек.
 
-        # Проверка, если пользователь пытается сгенерировать 600 или более паролей и каждый пароль состоит из 1000 или более символов
-        if num_passwords >= 600 and password_length >= 1000:
-            reply = QMessageBox.warning(
-                self,
-                "Предупреждение",
-                "Генерация такого большого количества длинных паролей может сильно нагрузить ваше устройство. Вы уверены, что хотите продолжить?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-            )
-            if reply == QMessageBox.StandardButton.No:
-                return
+        Пароли генерируются в соответствии с введенными параметрами пользователем:
+        количество паролей, длина, использование цифр и специальных символов.
+
+        Проверяет корректность введенных значений и устанавливает флаг passwords_generated.
+        """
 
         if not self.num_passwords_input.text() or not self.length_input.text():
             QMessageBox.critical(self, "Ошибка", "Пожалуйста, выберите все параметры перед генерацией паролей.")
@@ -717,7 +798,8 @@ class PasswordGeneratorApp(QWidget):
 
         # Проверьте, что пользователь ввел числа для количества паролей и длины
         if not num_passwords_text.isdigit() or not length_text.isdigit():
-            QMessageBox.critical(self, "Ошибка", "Пожалуйста, введите корректные значения для количества паролей и длины!")
+            QMessageBox.critical(self, "Ошибка",
+                                 "Пожалуйста, введите корректные значения для количества паролей и длины!")
             return
 
         if not num_passwords_text or not length_text:
@@ -731,7 +813,6 @@ class PasswordGeneratorApp(QWidget):
         self.use_uppercase = self.use_uppercase_checkbox.isChecked()
         self.use_lowercase = self.use_lowercase_checkbox.isChecked()
         self.passwords_generated = True
-
 
         if not self.use_numbers and not self.use_special_chars and not self.use_uppercase and not self.use_lowercase:
             QMessageBox.warning(self, "Внимание", "Пожалуйста, установите хотя бы одну опцию для генерации паролей!")
@@ -756,11 +837,24 @@ class PasswordGeneratorApp(QWidget):
 
     # open_password_dialog(password_data): Метод для открытия диалогового окна с сгенерированным паролем.
     def open_password_dialog(self, password_data):
+        """
+        Метод для открытия диалогового окна с сгенерированным паролем.
+
+        Args:
+        - password_data (dict): Словарь с данными о пароле.
+
+        Открывает диалоговое окно с сгенерированным паролем и использует encryption_key для расшифровки.
+        """
         dialog = PasswordDialog(password_data, self.encryption_key)
         dialog.exec()
 
     # display_passwords(): Метод для отображения сгенерированных паролей и кнопок "Посмотреть".
     def display_passwords(self):
+        """
+        Метод для отображения сгенерированных паролей и кнопок "Посмотреть".
+
+        Создает виджеты для отображения паролей и кнопок "Посмотреть" в главном окне.
+        """
         for i, password_data in enumerate(self.passwords_and_data):
             password_label = QLabel(f"Пароль: {password_data['password']}")
             view_button = QPushButton("Посмотреть")
@@ -782,6 +876,12 @@ class PasswordGeneratorApp(QWidget):
 
     # save_passwords(): Метод для открытия диалогового окна для сохранения паролей и данных.
     def save_passwords(self):
+        """
+        Метод для открытия диалогового окна сохранения паролей и данных.
+
+        Проверяет, были ли сгенерированы пароли, и открывает соответствующее диалоговое окно.
+        Сохраняет пароли в файл passwords.txt после закрытия диалогового окна.
+        """
         # Check if passwords have been generated
         if not self.passwords_generated:
             QMessageBox.critical(self, "Ошибка", "Сначала сгенерируйте пароли!")
@@ -795,6 +895,11 @@ class PasswordGeneratorApp(QWidget):
 
     # save_passwords_to_file(): Метод для сохранения паролей и данных в файле.
     def save_passwords_to_file(self):
+        """
+        Метод для сохранения паролей и данных в файле.
+
+        Создает или перезаписывает файл с паролями на основе данных из passwords_and_data.
+        """
         # Создать или перезаписать файл с паролями
         with open("passwords.txt", "w") as file:
             for password_data in self.passwords_and_data:
@@ -806,6 +911,11 @@ class PasswordGeneratorApp(QWidget):
 
     # load_passwords_from_file(): Метод для загрузки ранее сохраненных паролей из файла.
     def load_passwords_from_file(self):
+        """
+        Метод для загрузки паролей и данных из файла.
+
+        Возвращает список словарей с данными о паролях, прочитанными из файла passwords.txt.
+        """
         passwords_and_data = []
         try:
             with open("passwords.txt", "r") as file:
@@ -832,6 +942,14 @@ class PasswordGeneratorApp(QWidget):
 # DecryptDialog(QDialog): Класс для окна расшифровки пароля
 class DecryptDialog(QDialog):
     def __init__(self, encryption_key):
+        """
+        Конструктор класса DecryptDialog.
+
+        Инициализирует диалоговое окно для расшифровки пароля.
+
+        Args:
+        - encryption_key (str): Ключ шифрования в формате Fernet.
+        """
         super().__init__()
 
         layout = QVBoxLayout()
@@ -910,6 +1028,12 @@ class DecryptDialog(QDialog):
         self.setLayout(layout)
 
     def decrypt_text(self):
+        """
+        Метод для расшифровки текста.
+
+        Пытается расшифровать текст, используя введенный ключ и зашифрованный текст.
+        Выводит результат в диалоговое окно.
+        """
         key = self.key_input.text()
         encrypted_text = self.encrypted_text_input.text()
         try:
