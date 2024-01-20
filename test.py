@@ -81,7 +81,7 @@ class PasswordDialog(QDialog):
         """
         super().__init__()
 
-        self.setFixedSize(200, 250)
+        self.setFixedSize(200, 280)
 
         self.is_encrypted = False
 
@@ -161,6 +161,27 @@ class PasswordDialog(QDialog):
         layout.addWidget(save_button)
         save_button.clicked.connect(self.save_password)
 
+        mnemonic_button = QPushButton("Мнемоника")
+        mnemonic_button.setStyleSheet("""
+                                     text-decoration: none; 
+                                     border: none; 
+                                     padding: 5px 1px; 
+                                     font-size: 16px; 
+                                     background-color: #149dfb; 
+                                     color: #fff; 
+                                     border-radius: 5px; 
+                                     font-family: Calibri; 
+                                     font-weight: 900; 
+                                     border: 2px solid #507EA0
+                                    """)
+        mnemonic_button.clicked.connect(self.show_mnemonic_window)
+        mnemonic_button_style_pressed = "text-decoration: none; border: none; padding: 5px 1px; font-size: 16px; background-color: #149dfb; color: #fff; border-radius: 5px; cursor: pointer; font-family: Calibri; font-weight: 900; border: 2px solid #507EA0; background-color: #74C5FF;"
+        mnemonic_button_style_released = "text-decoration: none; border: none; padding: 5px 1px; font-size: 16px; background-color: #149dfb; color: #fff; border-radius: 5px; cursor: pointer; font-family: Calibri; font-weight: 900; border: 2px solid #507EA0;"
+        mnemonic_button.setStyleSheet(mnemonic_button_style_released)
+        mnemonic_button.pressed.connect(lambda: mnemonic_button.setStyleSheet(mnemonic_button_style_pressed))
+        mnemonic_button.released.connect(lambda: mnemonic_button.setStyleSheet(mnemonic_button_style_released))
+        layout.addWidget(mnemonic_button)
+
         self.encryption_key = encryption_key
 
         # кнопка "зашифровать" для шифрования пароля
@@ -213,6 +234,75 @@ class PasswordDialog(QDialog):
         layout.addWidget(show_key_button)
         show_key_button.clicked.connect(self.show_encryption_key)
         self.setLayout(layout)
+
+    def show_mnemonic_window(self):
+        mnemonic_phrase = self.generate_mnemonic_phrase()
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Мнемоническая фраза")
+
+        dialog.setStyleSheet("background-color: #0e1621; border: none; color: #FFFFFF; font-weight: 900;")
+
+        mnemonic_label = QTextEdit(f"Мнемоника фразы: {mnemonic_phrase}")
+        mnemonic_label.setStyleSheet("font-size: 12px; color: #FFFFFF;")
+
+        layout = QVBoxLayout()
+        layout.addWidget(mnemonic_label)
+
+        dialog.setLayout(layout)
+        dialog.exec()
+
+    def generate_mnemonic_phrase(self):
+        # Слова на которые заменяются буквы в мнемонической фразе
+        char_to_word = {
+            'a': ['Ананас', 'Авокадо', 'Астероид', 'Арбуз', 'Аквариум', 'Апельсин', 'Аккордеон', 'Ампула', 'Автобус', 'Аромат', 'Алфавит', 'Артишок'],
+            'b': ['Банан', 'Барабан', 'Бульдозер', 'Бриллиант', 'Букет', 'Барбарис', 'Багет', 'Булька', 'Белуга', 'Бамбук', 'Буран'],
+            'c': ['Цветок', 'Центр', 'Цирк', 'Цилиндр', 'Цитрус', 'Цитадель', 'Царь', 'Циан', 'Цветущий', 'Целебный'],
+            'd': ['Дельфин', 'Дракон', 'Домино', 'Динозавр', 'Девочка', 'Дискотека', 'Декор', 'Дуб', 'Дельта'],
+            'e': ['Единорог', 'Елка', 'Египет', 'Ежик', 'Еда', 'Ершик', 'Елец', 'Единство', 'Енот', 'Ереван'],
+            'f': ['Фламинго', 'Фонарь', 'Фантазия', 'Фиолет', 'Финик', 'Фонтан', 'Ферма', 'Фея', 'Флейта', 'Футбол'],
+            'g': ['Гироскоп', 'Гном', 'Гитара', 'Город', 'Галактика', 'Герой', 'Гонка', 'Газета', 'Гусли', 'Глобус'],
+            'h': ['Холодильник', 'Хамелеон', 'Хирург', 'Холм', 'Хвост', 'Хлопок', 'Хруст', 'Хижина', 'Хоккей', 'Хозяин'],
+            'i': ['Иглу', 'Индейка', 'Инфекция', 'Ирис', 'Изумруд', 'Индия', 'Издание', 'Интерес', 'Испания', 'Игрушка'],
+            'j': ['Жираф', 'Жемчуг', 'Жокей', 'Жалюзи', 'Животное', 'Журнал', 'Железо', 'Жара', 'Жаргон', 'Жанр'],
+            'k': ['Кенгуру', 'Котел', 'Коктейль', 'Карандаш', 'Космос', 'Компот', 'Костюм', 'Крокодил', 'Камень', 'Кольцо'],
+            'l': ['Лимон', 'Луна', 'Лимузин', 'Лес', 'Лужайка', 'Лодка', 'Лепесток', 'Лава', 'Лицо', 'Листок'],
+            'm': ['Магнит', 'Медуза', 'Микроскоп', 'Музыка', 'Метро', 'Море', 'Медведь', 'Молоко', 'Мельница', 'Миска'],
+            'n': ['Носорог', 'Небо', 'Ниндзя', 'Нога', 'Нежность', 'Надежда', 'Носок', 'Напиток', 'Ниша', 'Намаз'],
+            'o': ['Орех', 'Орел', 'Океан', 'Окно', 'Оранжевый', 'Облако', 'Очки', 'Обед', 'Опера', 'Очарование'],
+            'p': ['Пингвин', 'Пижама', 'Паровоз', 'Печь', 'Пальто', 'Парк', 'Папоротник', 'Подушка', 'Помидор', 'Панда'],
+            'q': ['Кварц', 'Квадрат', 'Кукуруза', 'Колесо', 'Кулиса', 'Кузов', 'Купол', 'Квест', 'Косметика', 'Краб'],
+            'r': ['Ракета', 'Радуга', 'Рицца', 'Робот', 'Ромашка', 'Руль', 'Реферат', 'Револьвер', 'Ресторан', 'Рельс'],
+            's': ['Слон', 'Спагетти', 'Самолет', 'Солнце', 'Сирень', 'Скейтборд', 'Село', 'Сосиска', 'Стрекоза', 'Скрипка'],
+            't': ['Танк', 'Телескоп', 'Торт', 'Тень', 'Тюльпан', 'Топор', 'Трон', 'Трость', 'Тираж', 'Теннис'],
+            'u': ['Утюг', 'Урал', 'Узел', 'Улица', 'Урожай', 'Улитка', 'Усадьба', 'Утро', 'Усмешка', 'Уровень'],
+            'v': ['Вишня', 'Ведро', 'Вулкан', 'Виолончель', 'Водопад', 'Ветер', 'Ваза', 'Виза', 'Вина', 'Веревка'],
+            'w': ['W'],
+            'x': ['Хлам', 'Халат', 'Хитрость', 'Хомяк', 'Хребет', 'Хроника', 'Хризантема', 'Хитин', 'Хармония'],
+            'y': ['Ягода', 'Ярмарка', 'Яд', 'Якорь', 'Ящик', 'Ягненок', 'Ярлык', 'Язык', 'Яма', 'Явление'],
+            'z': ['Зебра', 'Замок', 'Зонтик', 'Звезда', 'Змея', 'Заслонка', 'Золото', 'Завтрак', 'Загадка', 'Заря'],
+            '0': ['Н'],
+            '1': ['О'],
+            '2': ['Д'],
+            '3': ['Т'],
+            '4': ['Ч'],
+            '5': ['П'],
+            '6': ['Ш'],
+            '7': ['С'],
+            '8': ['В'],
+            '9': ['Д'],
+        }
+
+        password = self.password_data['password']
+
+        # Generate mnemonic phrase
+        mnemonic_words = []
+        for char in password:
+            words_for_char = char_to_word.get(char.lower(), [char])
+            selected_word = random.choice(words_for_char)
+            mnemonic_words.append(selected_word)
+
+        mnemonic_phrase = ' '.join(mnemonic_words)
+        return mnemonic_phrase
 
     def show_encryption_key(self):
         """
