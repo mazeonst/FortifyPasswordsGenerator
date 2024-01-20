@@ -633,11 +633,11 @@ class PasswordGeneratorApp(QWidget):
         decrypt_button.clicked.connect(self.open_decrypt_dialog)
 
         # Добавим кнопку "Настройки" на главную страницу
-        settings_button = QPushButton("Настройки", self)
+        settings_button = QPushButton("Настройки")
         settings_button.setStyleSheet("""
                                       text-decoration: none; 
                                       border: none; 
-                                      padding: 3px 1px; 
+                                      padding: 5px 1px; 
                                       font-size: 16px; 
                                       background-color: #149dfb; 
                                       color: #fff; 
@@ -646,8 +646,8 @@ class PasswordGeneratorApp(QWidget):
                                       font-weight: 900; 
                                       border: 2px solid #507EA0;
                                       """)
-        settings_button_style_pressed = "text-decoration: none; border: none; padding: 3px 1px; font-size: 16px; background-color: #149dfb; color: #fff; border-radius: 5px; cursor: pointer; font-family: Calibri; font-weight: 900; border: 2px solid #507EA0; background-color: #74C5FF;"
-        settings_button_style_released = "text-decoration: none; border: none; padding: 3px 1px; font-size: 16px; background-color: #149dfb; color: #fff; border-radius: 5px; cursor: pointer; font-family: Calibri; font-weight: 900; border: 2px solid #507EA0;"
+        settings_button_style_pressed = "text-decoration: none; border: none; padding: 5px 1px; font-size: 16px; background-color: #149dfb; color: #fff; border-radius: 5px; cursor: pointer; font-family: Calibri; font-weight: 900; border: 2px solid #507EA0; background-color: #74C5FF;"
+        settings_button_style_released = "text-decoration: none; border: none; padding: 5px 1px; font-size: 16px; background-color: #149dfb; color: #fff; border-radius: 5px; cursor: pointer; font-family: Calibri; font-weight: 900; border: 2px solid #507EA0;"
         settings_button.pressed.connect(lambda: settings_button.setStyleSheet(settings_button_style_pressed))
         settings_button.released.connect(lambda: settings_button.setStyleSheet(settings_button_style_released))
         settings_button.clicked.connect(self.show_settings_window)
@@ -660,6 +660,7 @@ class PasswordGeneratorApp(QWidget):
         self.setLayout(left_layout)
         self.setWindowTitle("fortify")
         self.setWindowIcon(QIcon('icon.png'))
+        self.setFixedSize(780, 440)
         self.show()
 
     def show_settings_window(self):
