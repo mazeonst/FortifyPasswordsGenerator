@@ -1,7 +1,7 @@
 # Fortify
 # Профессиональный генератор паролей, включающий в себя множество опций для генерации пароля
 # GitHub: https://github.com/mazeonst/FortifyPasswordsGenerator
-# Version: 1.2.8 {beta} Добавлена возможность генерации мнемонических фраз для паролей
+# Version: 1.2.9 {beta} Добавлен алгоритм вычисления надежности пароля
 # Developer: Michael Mirmikov
 # Telegram: @mazeonst
 # Email: mirmikovmisa@gmail.com
@@ -13,7 +13,7 @@ import pyperclip
 import os
 from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QLineEdit, QCheckBox, QScrollArea, QVBoxLayout, \
     QDialog, QTextEdit, QInputDialog, QMessageBox, QSplitter, QTextBrowser, QHBoxLayout
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QIcon, QColor
 from PyQt6.QtCore import Qt
 from cryptography.fernet import Fernet
 from win10toast import ToastNotifier
@@ -71,6 +71,94 @@ def generate_password(length, use_numbers=False, use_special_chars=False, use_up
 
 # PasswordDialog(QDialog): Диалоговое окно для отображения сгенерированного пароля и связанных с ним данных.
 class PasswordDialog(QDialog):
+
+    def has_common_bad_words(self, password):
+        common_bad_words = [
+            "QWERTY", "qwerty", "PASSWORD", "password", "1234", "12345678", "MONKEY", "monkey", "111111",
+            "ytrewq", "YTREWQ", "passw0rd", "PASSW0RD", "1QAZ2WSX", "1qaz2wsx", "1q2w3e4r", "1Q2W3E4R", "qwe123",
+            "letmein", "admin", "abc123", "iloveyou", "sunshine", "princess", "football", "baseball", "superman",
+            "batman", "starwars", "pokemon", "dragon", "hello123", "welcome1", "samantha", "charlie1", "chocolate",
+            "123abc", "iloveme", "password", "qwerty", "123456", "letmeout", "letmein123", "admin123", "iloveyou123",
+            "sunshine123", "princess123", "football123", "baseball123", "superman123", "batman123", "starwars123",
+            "pokemon123", "dragon123", "hello1234", "welcome123", "samantha123", "charlie123", "chocolate123",
+            "123abc456", "iloveme123", "password123", "qwerty123", "123456789", "letmein", "admin", "iloveyou",
+            "sunshine", "princess", "football", "baseball", "superman", "batman", "starwars", "pokemon", "dragon",
+            "hello", "welcome", "samantha", "charlie", "chocolate", "abc123", "iloveme"
+        ]
+        return any(word.lower() in password.lower() for word in common_bad_words)
+
+    def assess_password_quality(self, password_data):
+        """
+        Оценка качества пароля на основе заданных критериев.
+
+        Args:
+        - password_data (dict): Словарь с данными о пароле.
+
+        Returns:
+        - quality (str): Качество пароля ("Плохой", "Хороший", "Отличный").
+        - color (QColor): Цвет для отображения пароля.
+        """
+        password = password_data['password']
+        length = len(password)
+        has_numbers = any(char.isdigit() for char in password)
+        has_lowercase = any(char.islower() for char in password)
+        has_uppercase = any(char.isupper() for char in password)
+        has_special_chars = any(char.isascii() and not char.isalnum() for char in password)
+
+        if self.has_common_bad_words(password):
+            return "", QColor("red")
+
+        if has_numbers and not has_lowercase and not has_uppercase and not has_special_chars:
+            if 1 <= length <= 24:
+                return "", QColor("red")
+            elif 24 < length <= 48:
+                return "", QColor("yellow")
+            else:
+                return "", QColor("green")
+
+        if has_lowercase and not has_uppercase and not has_numbers and not has_special_chars:
+            if 1 <= length <= 13:
+                return "", QColor("red")
+            elif 14 <= length <= 15:
+                return "", QColor("yellow")
+            else:
+                return "", QColor("green")
+
+        if has_uppercase and not has_lowercase and not has_numbers and not has_special_chars:
+            if 1 <= length <= 13:
+                return "", QColor("red")
+            elif 14 <= length <= 15:
+                return "", QColor("yellow")
+            else:
+                return "", QColor("green")
+
+        if has_lowercase and has_uppercase and not has_numbers and not has_special_chars:
+            if 1 <= length <= 11:
+                return "", QColor("red")
+            elif 12 <= length <= 14:
+                return "", QColor("yellow")
+            else:
+                return "", QColor("green")
+
+        if has_numbers and has_lowercase and has_uppercase and not has_special_chars:
+            if 1 <= length <= 11:
+                return "", QColor("red")
+            elif 12 <= length <= 13:
+                return "", QColor("yellow")
+            else:
+                return "", QColor("green")
+
+        if has_numbers and has_lowercase and has_uppercase and has_special_chars:
+            if 1 <= length <= 10:
+                return "", QColor("red")
+            elif 11 <= length <= 12:
+                return "", QColor("yellow")
+            else:
+                return "", QColor("green")
+
+        # Если ни одно из вышеуказанных условий не соответствует, возвращаем "Отличный" с зеленым цветом
+        return "", QColor("green")
+
     def __init__(self, password_data, encryption_key):
         """
         Конструктор класса PasswordDialog.
@@ -99,7 +187,10 @@ class PasswordDialog(QDialog):
 
         self.password_data = password_data
 
-        self.password_label = QLabel(f"Пароль: {self.password_data['password']}")
+        quality, color = self.assess_password_quality(self.password_data)
+        password_text = f"Пароль: {self.password_data['password']} {quality}"
+        self.password_label = QLabel(password_text)
+        self.password_label.setStyleSheet(f"color: {color.name()}; font-weight: 900;")
         layout.addWidget(self.password_label)
 
         self.email_label = QLabel(f"Почта: {self.password_data['email']}")
@@ -124,7 +215,7 @@ class PasswordDialog(QDialog):
                                     border-radius: 5px; 
                                     font-family: Calibri; 
                                     font-weight: 900; 
-                                    border: 2px solid #507EA0
+                                    border: 2px solid #507EA0;
 
                                 """)
         # Анимация нажатия кнопки
@@ -149,7 +240,7 @@ class PasswordDialog(QDialog):
                                     border-radius: 5px; 
                                     font-family: Calibri; 
                                     font-weight: 900; 
-                                    border: 2px solid #507EA0
+                                    border: 2px solid #507EA0;
 
                                 """)
         # Анимация нажатия кнопки
@@ -172,7 +263,7 @@ class PasswordDialog(QDialog):
                                      border-radius: 5px; 
                                      font-family: Calibri; 
                                      font-weight: 900; 
-                                     border: 2px solid #507EA0
+                                     border: 2px solid #507EA0;
                                     """)
         mnemonic_button.clicked.connect(self.show_mnemonic_window)
         mnemonic_button_style_pressed = "text-decoration: none; border: none; padding: 5px 1px; font-size: 16px; background-color: #149dfb; color: #fff; border-radius: 5px; cursor: pointer; font-family: Calibri; font-weight: 900; border: 2px solid #507EA0; background-color: #74C5FF;"
@@ -195,9 +286,9 @@ class PasswordDialog(QDialog):
                                     background-color: #149dfb; 
                                     color: #fff; 
                                     border-radius: 5px; 
-                                    font-family: Calibri; 
+                                    font-family: Calibri;  
                                     font-weight: 900; 
-                                    border: 2px solid #507EA0
+                                    border: 2px solid #507EA0;
 
                                 """)
         # Анимация нажатия кнопки
@@ -222,7 +313,7 @@ class PasswordDialog(QDialog):
                                     border-radius: 5px; 
                                     font-family: Calibri; 
                                     font-weight: 900; 
-                                    border: 2px solid #507EA0
+                                    border: 2px solid #507EA0;
 
                                 """)
         # Анимация нажатия кнопки
@@ -254,25 +345,32 @@ class PasswordDialog(QDialog):
     def generate_mnemonic_phrase(self):
         # Слова на которые заменяются буквы в мнемонической фразе
         char_to_word = {
-            'a': ['Ананас', 'Авокадо', 'Астероид', 'Арбуз', 'Аквариум', 'Апельсин', 'Аккордеон', 'Ампула', 'Автобус', 'Аромат', 'Алфавит', 'Артишок'],
-            'b': ['Банан', 'Барабан', 'Бульдозер', 'Бриллиант', 'Букет', 'Барбарис', 'Багет', 'Булька', 'Белуга', 'Бамбук', 'Буран'],
+            'a': ['Ананас', 'Авокадо', 'Астероид', 'Арбуз', 'Аквариум', 'Апельсин', 'Аккордеон', 'Ампула', 'Автобус',
+                  'Аромат', 'Алфавит', 'Артишок'],
+            'b': ['Банан', 'Барабан', 'Бульдозер', 'Бриллиант', 'Букет', 'Барбарис', 'Багет', 'Булька', 'Белуга',
+                  'Бамбук', 'Буран'],
             'c': ['Цветок', 'Центр', 'Цирк', 'Цилиндр', 'Цитрус', 'Цитадель', 'Царь', 'Циан', 'Цветущий', 'Целебный'],
             'd': ['Дельфин', 'Дракон', 'Домино', 'Динозавр', 'Девочка', 'Дискотека', 'Декор', 'Дуб', 'Дельта'],
             'e': ['Единорог', 'Елка', 'Египет', 'Ежик', 'Еда', 'Ершик', 'Елец', 'Единство', 'Енот', 'Ереван'],
             'f': ['Фламинго', 'Фонарь', 'Фантазия', 'Фиолет', 'Финик', 'Фонтан', 'Ферма', 'Фея', 'Флейта', 'Футбол'],
             'g': ['Гироскоп', 'Гном', 'Гитара', 'Город', 'Галактика', 'Герой', 'Гонка', 'Газета', 'Гусли', 'Глобус'],
-            'h': ['Холодильник', 'Хамелеон', 'Хирург', 'Холм', 'Хвост', 'Хлопок', 'Хруст', 'Хижина', 'Хоккей', 'Хозяин'],
-            'i': ['Иглу', 'Индейка', 'Инфекция', 'Ирис', 'Изумруд', 'Индия', 'Издание', 'Интерес', 'Испания', 'Игрушка'],
+            'h': ['Холодильник', 'Хамелеон', 'Хирург', 'Холм', 'Хвост', 'Хлопок', 'Хруст', 'Хижина', 'Хоккей',
+                  'Хозяин'],
+            'i': ['Иглу', 'Индейка', 'Инфекция', 'Ирис', 'Изумруд', 'Индия', 'Издание', 'Интерес', 'Испания',
+                  'Игрушка'],
             'j': ['Жираф', 'Жемчуг', 'Жокей', 'Жалюзи', 'Животное', 'Журнал', 'Железо', 'Жара', 'Жаргон', 'Жанр'],
-            'k': ['Кенгуру', 'Котел', 'Коктейль', 'Карандаш', 'Космос', 'Компот', 'Костюм', 'Крокодил', 'Камень', 'Кольцо'],
+            'k': ['Кенгуру', 'Котел', 'Коктейль', 'Карандаш', 'Космос', 'Компот', 'Костюм', 'Крокодил', 'Камень',
+                  'Кольцо'],
             'l': ['Лимон', 'Луна', 'Лимузин', 'Лес', 'Лужайка', 'Лодка', 'Лепесток', 'Лава', 'Лицо', 'Листок'],
             'm': ['Магнит', 'Медуза', 'Микроскоп', 'Музыка', 'Метро', 'Море', 'Медведь', 'Молоко', 'Мельница', 'Миска'],
             'n': ['Носорог', 'Небо', 'Ниндзя', 'Нога', 'Нежность', 'Надежда', 'Носок', 'Напиток', 'Ниша', 'Намаз'],
             'o': ['Орех', 'Орел', 'Океан', 'Окно', 'Оранжевый', 'Облако', 'Очки', 'Обед', 'Опера', 'Очарование'],
-            'p': ['Пингвин', 'Пижама', 'Паровоз', 'Печь', 'Пальто', 'Парк', 'Папоротник', 'Подушка', 'Помидор', 'Панда'],
+            'p': ['Пингвин', 'Пижама', 'Паровоз', 'Печь', 'Пальто', 'Парк', 'Папоротник', 'Подушка', 'Помидор',
+                  'Панда'],
             'q': ['Кварц', 'Квадрат', 'Кукуруза', 'Колесо', 'Кулиса', 'Кузов', 'Купол', 'Квест', 'Косметика', 'Краб'],
             'r': ['Ракета', 'Радуга', 'Рицца', 'Робот', 'Ромашка', 'Руль', 'Реферат', 'Револьвер', 'Ресторан', 'Рельс'],
-            's': ['Слон', 'Спагетти', 'Самолет', 'Солнце', 'Сирень', 'Скейтборд', 'Село', 'Сосиска', 'Стрекоза', 'Скрипка'],
+            's': ['Слон', 'Спагетти', 'Самолет', 'Солнце', 'Сирень', 'Скейтборд', 'Село', 'Сосиска', 'Стрекоза',
+                  'Скрипка'],
             't': ['Танк', 'Телескоп', 'Торт', 'Тень', 'Тюльпан', 'Топор', 'Трон', 'Трость', 'Тираж', 'Теннис'],
             'u': ['Утюг', 'Урал', 'Узел', 'Улица', 'Урожай', 'Улитка', 'Усадьба', 'Утро', 'Усмешка', 'Уровень'],
             'v': ['Вишня', 'Ведро', 'Вулкан', 'Виолончель', 'Водопад', 'Ветер', 'Ваза', 'Виза', 'Вина', 'Веревка'],
@@ -280,16 +378,16 @@ class PasswordDialog(QDialog):
             'x': ['Хлам', 'Халат', 'Хитрость', 'Хомяк', 'Хребет', 'Хроника', 'Хризантема', 'Хитин', 'Хармония'],
             'y': ['Ягода', 'Ярмарка', 'Яд', 'Якорь', 'Ящик', 'Ягненок', 'Ярлык', 'Язык', 'Яма', 'Явление'],
             'z': ['Зебра', 'Замок', 'Зонтик', 'Звезда', 'Змея', 'Заслонка', 'Золото', 'Завтрак', 'Загадка', 'Заря'],
-            '0': ['Н'],
-            '1': ['О'],
-            '2': ['Д'],
-            '3': ['Т'],
-            '4': ['Ч'],
-            '5': ['П'],
-            '6': ['Ш'],
-            '7': ['С'],
-            '8': ['В'],
-            '9': ['Д'],
+            '0': ['Ноль'],
+            '1': ['Один'],
+            '2': ['Два'],
+            '3': ['Три'],
+            '4': ['Четыре'],
+            '5': ['Пять'],
+            '6': ['Шесть'],
+            '7': ['Семь'],
+            '8': ['Восемь'],
+            '9': ['Девять'],
         }
 
         password = self.password_data['password']
@@ -549,7 +647,7 @@ class PasswordGeneratorApp(QWidget):
                                             cursor: pointer; 
                                             font-family: Calibri; 
                                             font-weight: 900; 
-                                            border: 1px solid #507EA0
+                                            border: 1px solid #507EA0;
 
                                         """)
 
@@ -570,7 +668,7 @@ class PasswordGeneratorApp(QWidget):
                                         cursor: pointer; 
                                         font-family: Calibri; 
                                         font-weight: 900; 
-                                        border: 1px solid #507EA0
+                                        border: 1px solid #507EA0;
 
                                     """)
 
@@ -578,7 +676,7 @@ class PasswordGeneratorApp(QWidget):
         left_layout.addWidget(QLabel("Введите слово:"))
         left_layout.addWidget(self.word_input)
         self.word_input.setStyleSheet(
-            "text-decoration: none; border: none; padding: 2px 1px; font-size: 14px; background-color: #2b5378; color: #fff; border-radius: 5px; cursor: pointer; font-family: Calibri; font-weight: 900; border: 1px solid #507EA0")
+            "text-decoration: none; border: none; padding: 2px 1px; font-size: 14px; background-color: #2b5378; color: #fff; border-radius: 5px; cursor: pointer; font-family: Calibri; font-weight: 900; border: 1px solid #507EA0;")
 
         # numbers_checkbox: Флажок для включения цифр в пароль
         self.numbers_checkbox = QCheckBox("Включать цифры в пароль?")
