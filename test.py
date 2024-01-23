@@ -1,7 +1,7 @@
 # Fortify
 # Профессиональный генератор паролей, включающий в себя множество опций для генерации пароля
 # GitHub: https://github.com/mazeonst/FortifyPasswordsGenerator
-# Version:
+# Version: 1.2.8 {beta} Добавлена возможность генерации мнемонических фраз для паролей
 # Developer: Michael Mirmikov
 # Telegram: @mazeonst
 # Email: mirmikovmisa@gmail.com
