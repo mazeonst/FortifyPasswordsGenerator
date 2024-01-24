@@ -95,6 +95,7 @@ class PasswordDialog(QDialog):
         - password_data (dict): Словарь с данными о пароле.
 
         Returns:
+
         - quality (str): Качество пароля ("Плохой", "Хороший", "Отличный").
         - color (QColor): Цвет для отображения пароля.
         """
