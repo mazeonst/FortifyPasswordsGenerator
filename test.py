@@ -1,7 +1,7 @@
 # Fortify
 # Профессиональный генератор паролей, включающий в себя множество опций для генерации пароля
 # GitHub: https://github.com/mazeonst/FortifyPasswordsGenerator
-# Version: 1.3.90{beta} Добавлен алгоритм вычисления надежности пароля
+# Version: 1.2.9 {beta} Добавлен алгоритм вычисления надежности пароля
 # Developer: Michael Mirmikov
 # Telegram: @mazeonst
 # Email: mirmikovmisa@gmail.com
@@ -157,7 +157,7 @@ class PasswordDialog(QDialog):
                 return "", QColor("green")
 
         # Если ни одно из вышеуказанных условий не соответствует, возвращаем "Отличный" с зеленым цветом
-        return "", QColor("green")
+        return "", QColor("red")
 
     def __init__(self, password_data, encryption_key):
         """
