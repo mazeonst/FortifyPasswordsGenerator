@@ -1,7 +1,7 @@
 # Fortify
 # Профессиональный генератор паролей, включающий в себя множество опций для генерации пароля
 # GitHub: https://github.com/mazeonst/FortifyPasswordsGenerator
-# Version:
+# Version: 1.2.7.1 добавлена возможность отображения ошибки при импорте ключа fernet
 # Developer: Michael Mirmikov
 # Telegram: @mazeonst
 # Email: mirmikovmisa@gmail.com
