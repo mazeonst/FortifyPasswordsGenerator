@@ -1072,8 +1072,13 @@ class DecryptDialog(QDialog):
             decrypted_text = fernet.decrypt(encrypted_text.encode()).decode()
             QMessageBox.information(self, "Расшифрованный текст", f"Расшифрованный текст: {decrypted_text}")
         except Exception as e:
-            QMessageBox.critical(self, "Ошибка",
-                                 "Не удалось расшифровать текст. Убедитесь, что ключ и зашифрованный текст верны.")
+            if "cryptography.fernet.InvalidToken" in str(e):
+                QMessageBox.critical(self, "Ошибка", "Не удалось расшифровать текст. Убедитесь, что ключ и зашифрованный текст верны.")
+            else:
+                # Вывести сообщение об ошибке в консоль или лог файл
+                print(f"Ошибка при расшифровке текста: {e}")
+                # или logging.error(f"Ошибка при расшифровке текста: {e}")
+                QMessageBox.critical(self, "Ошибка", "Произошла ошибка при расшифровке текста. Проверьте консоль или лог файл.")
 
 
 # В if __name__ == '__main__': блоке приложение и главное окно ex создаются, и производится загрузка ранее сохраненных паролей из файла.
