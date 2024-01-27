@@ -1,20 +1,18 @@
-# Инициализация переменных
-max_element = 0
-second_max_element = 0
+max_count = 0
+current_count = 1
+prev_number = int(input("Введите число: "))
 
-# Считывание первого элемента
-current_element = int(input("Введите первый элемент последовательности (введите 0 для завершения): "))
-
-while current_element != 0:
-    # Обновление максимального и второго по величине элементов
-    if current_element > max_element:
-        second_max_element = max_element
-        max_element = current_element
-    elif current_element > second_max_element:
-        second_max_element = current_element
+while prev_number != 0:
+    current_number = int(input("Введите следующее число: "))
     
-    # Считывание следующего элемента
-    current_element = int(input("Введите следующий элемент последовательности (введите 0 для завершения): "))
+    if current_number == prev_number:
+        current_count += 1
+    else:
+        current_count = 1
+    
+    if current_count > max_count:
+        max_count = current_count
+    
+    prev_number = current_number
 
-# Вывод результата
-print("Второй по величине элемент в последовательности:", second_max_element)
+print("Наибольшее число подряд идущих элементов:", max_count)
