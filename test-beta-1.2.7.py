@@ -219,6 +219,8 @@ class PasswordDialog(QDialog):
         """
         Метод для отображения окна с ключом шифрования.
         """
+        print("Открыто диалоговое окно 'Ключ шифрования'")
+
         key_display_dialog = KeyDisplayDialog(self.encryption_key)
         key_display_dialog.exec()
 
@@ -333,6 +335,8 @@ class PasswordSaveDialog(QDialog):
         self.passwords_and_data = passwords_and_data
         password_text = ""
 
+        print("Открыто диалоговое окно 'Сохраненные пароли и данные'")
+
         for password_data in self.passwords_and_data:
             password_text += f"Сервис: {password_data['service']}\n"
             password_text += f"Пароль: {password_data['password']}\n"
@@ -398,7 +402,9 @@ class PasswordGeneratorApp(QWidget):
         try:
             with open("encryption_key.key", "rb") as key_file:
                 self.encryption_key = key_file.read().decode()
-            print("Ключ шифрования загружен")
+
+            print("Приложение запущено, ключ шифрования успешно загружен")
+
         except FileNotFoundError:
             self.save_encryption_key()
 
@@ -670,6 +676,8 @@ class PasswordGeneratorApp(QWidget):
         dialog.setStyleSheet("background-color: #0e1621; border: none")
         dialog.setFixedSize(180, 130)
 
+        print("Открыто диалоговое окно 'Настройки'")
+
         layout = QVBoxLayout(dialog)
 
         # Кнопка отвечающая за возможности
@@ -756,6 +764,8 @@ class PasswordGeneratorApp(QWidget):
         self.setWindowIcon(QIcon('icon.png'))
         dialog.setFixedSize(500, 400)
 
+        print("Открыто диалоговое окно 'Советы по генерации пароля'")
+
         dialog.setStyleSheet("background-color: #0e1621; border: none")
 
         info_text = QTextBrowser(dialog)
@@ -792,9 +802,11 @@ class PasswordGeneratorApp(QWidget):
     # Возможности программы
     def show_fortify_pass_info(self):
         dialog = QDialog(self)
-        dialog.setWindowTitle("Возможности Fortify Pass")
+        dialog.setWindowTitle("Возможности Fortify")
         self.setWindowIcon(QIcon('icon.png'))
         dialog.setFixedSize(700, 580)
+
+        print("Открыто диалоговое окно 'Возможности Fortify'")
 
         dialog.setStyleSheet("background-color: #0e1621; border: none")
 
@@ -847,6 +859,8 @@ class PasswordGeneratorApp(QWidget):
 
         Проверяет корректность введенных значений и устанавливает флаг passwords_generated.
         """
+
+        print("Пароли успешно сгенерированы")
 
         if not self.num_passwords_input.text() or not self.length_input.text():
             QMessageBox.critical(self, "Ошибка", "Пожалуйста, выберите все параметры перед генерацией паролей.")
@@ -906,6 +920,8 @@ class PasswordGeneratorApp(QWidget):
 
         Открывает диалоговое окно с сгенерированным паролем и использует encryption_key для расшифровки.
         """
+        print(f"Открыто диалоговое окно 'Пароль и данные'")
+
         dialog = PasswordDialog(password_data, self.encryption_key)
         dialog.exec()
 
@@ -1024,6 +1040,8 @@ class DecryptDialog(QDialog):
 
         self.encryption_key = encryption_key
 
+        print("Открыто диалоговое окно 'Расшифровать пароль'")
+
         # Конвертируем ключ безопасности в строку и устанавливаем его в поле ввода
         self.encryption_key_str = encryption_key.decode() if isinstance(encryption_key, bytes) else encryption_key
         self.key_label = QLabel("Введите ключ безопасности:")
@@ -1100,6 +1118,9 @@ class DecryptDialog(QDialog):
         try:
             fernet = Fernet(key.encode())
             decrypted_text = fernet.decrypt(encrypted_text.encode()).decode()
+
+            print("Открыто диалоговое окно 'Расшифрованный текст'")
+
             QMessageBox.information(self, "Расшифрованный текст", f"Расшифрованный текст: {decrypted_text}")
         except Exception as e:
             if "cryptography.fernet.InvalidToken" in str(e):
@@ -1108,12 +1129,13 @@ class DecryptDialog(QDialog):
                 # Вывести сообщение об ошибке в консоль или лог файл
                 print(f"Ошибка при расшифровке текста: {e}")
                 # или logging.error(f"Ошибка при расшифровке текста: {e}")
-                QMessageBox.critical(self, "Ошибка", "Произошла ошибка при расшифровке текста. Проверьте консоль или лог файл.")
+                QMessageBox.critical(self, "Ошибка", "Произошла ошибка при расшифровке текста. Проверьте консоль или ключ безопасности.")
 
 
 # В if __name__ == '__main__': блоке приложение и главное окно ex создаются, и производится загрузка ранее сохраненных паролей из файла.
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+
     ex = PasswordGeneratorApp()
 
     # Загрузка ключа шифрования
