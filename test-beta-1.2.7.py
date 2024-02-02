@@ -934,6 +934,7 @@ class PasswordGeneratorApp(QWidget):
         """
         for i, password_data in enumerate(self.passwords_and_data):
             password_label = QLabel(f"Пароль: {password_data['password']}")
+
             view_button = QPushButton("Посмотреть")
             view_button.setStyleSheet("""
                                       text-decoration: none; 
@@ -948,6 +949,7 @@ class PasswordGeneratorApp(QWidget):
                                       border: 2px solid #507EA0;
                                       """)
             view_button.clicked.connect(lambda _, password_data=password_data: self.open_password_dialog(password_data))
+
             self.password_layout.addWidget(password_label)
             self.password_layout.addWidget(view_button)
 
