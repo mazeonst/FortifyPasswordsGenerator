@@ -5,6 +5,7 @@
 # 1. Добавлена кнопка "Консоль"
 # 2. Все действия произведенные пользователем отображаются в консоли
 # 3. Кнопка "Ключ шифрования" перенесена в окно "Настройки"
+# 4. Изменено окно "Сгенерированные пароли"
 # Developer: Michael Mirmikov
 # Telegram: @mazeonst
 # Email: mirmikovmisa@gmail.com
@@ -13,8 +14,7 @@ import random
 import string
 import pyperclip
 import os
-from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QLineEdit, QCheckBox, QScrollArea, QVBoxLayout, \
-    QDialog, QTextEdit, QInputDialog, QMessageBox, QSplitter, QTextBrowser, QHBoxLayout, QComboBox
+from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QLineEdit, QCheckBox, QScrollArea, QVBoxLayout, QDialog, QTextEdit, QInputDialog, QMessageBox, QSplitter, QTextBrowser, QHBoxLayout, QComboBox, QFileDialog
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
 from cryptography.fernet import Fernet
@@ -273,6 +273,13 @@ class KeyDisplayDialog(QDialog):
         layout.addWidget(key_label)
 
         key_text_edit = QTextEdit(str(encryption_key))
+        key_text_edit.setStyleSheet("""
+                background-color: #1f2937;
+                color: #FFFFFF;
+                border: 2px solid #4a5568;
+                border-radius: 5px;
+                padding: 10px;
+            """)
         layout.addWidget(key_text_edit)
 
         self.setLayout(layout)
@@ -281,41 +288,131 @@ class KeyDisplayDialog(QDialog):
 # PasswordSaveDialog(QDialog): Диалоговое окно для отображения сохраненных паролей и связанных с ними данных.
 class PasswordSaveDialog(QDialog):
     def __init__(self, passwords_and_data):
-        """
-        Конструктор класса PasswordSaveDialog.
-
-        Parameters:
-            passwords_and_data (list): Список словарей с сохраненными паролями и связанными данными.
-        """
         super().__init__()
 
         layout = QVBoxLayout()
         self.setWindowTitle("Сохраненные пароли и данные")
         self.setWindowIcon(QIcon('icon.png'))
         self.setStyleSheet("""
+            background-color: #0e1621;
+            color: #FFFFFF; 
+            font-weight: 900;
+            border: none;
+        """)
 
-                        background-color: #0e1621;
-                        color: #FFFFFF; 
-                        font-weight: 900;
-                        border: none;
-
-                    """)
         self.passwords_and_data = passwords_and_data
-        password_text = ""
-
         print("Открыто диалоговое окно 'Сохраненные пароли и данные'")
 
+        scroll_area = QScrollArea(self)
+        scroll_area.setWidgetResizable(True)
+        scroll_widget = QWidget()
+        scroll_layout = QVBoxLayout(scroll_widget)
+        scroll_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
         for password_data in self.passwords_and_data:
-            password_text += f"Сервис: {password_data['service']}\n"
+            password_block = QTextEdit(self)
+            password_block.setStyleSheet("""
+                background-color: #1f2937;
+                color: #FFFFFF;
+                border: 2px solid #4a5568;
+                border-radius: 5px;
+                padding: 10px;
+            """)
+            password_text = f"Сервис: {password_data['service']}\n"
             password_text += f"Пароль: {password_data['password']}\n"
             password_text += f"Почта: {password_data['email']}\n"
-            password_text += f"Логин: {password_data['login']}\n\n"
+            password_text += f"Логин: {password_data['login']}"
+            password_block.setPlainText(password_text)
+            password_block.setReadOnly(True)
+            scroll_layout.addWidget(password_block)
 
-        password_label = QTextEdit(self)
-        password_label.setPlainText(password_text)
-        layout.addWidget(password_label)
+            copy_button = QPushButton("Скопировать", self)
+            copy_button.setStyleSheet("""
+                text-decoration: none; 
+                border: none; 
+                padding: 3px 1px; 
+                font-size: 16px; 
+                background-color: #149dfb; 
+                color: #fff; 
+                border-radius: 5px; 
+                font-family: Calibri; 
+                font-weight: 900; 
+                border: 2px solid #507EA0
+            """)
+            copy_button.clicked.connect(lambda _, text=password_text: self.copy_text_to_clipboard(text))
+            scroll_layout.addWidget(copy_button)
+
+        scroll_widget.setLayout(scroll_layout)
+        scroll_area.setWidget(scroll_widget)
+        layout.addWidget(scroll_area)
+
+        # Добавляем кнопку "Скачать"
+        download_button = QPushButton("Скачать", self)
+        download_button.setStyleSheet("""
+            text-decoration: none; 
+            border: none; 
+            padding: 5px 1px; 
+            font-size: 16px; 
+            background-color: #0070FF; 
+            color: #fff; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-family: Calibri; 
+            font-weight: 900; 
+            border: 2px solid #005CD2
+        """)
+        download_button.clicked.connect(self.download_passwords)
+        layout.addWidget(download_button)
+
+        scroll_area_style = """
+        QScrollArea {
+            background-color: #2b5378;  
+            border-radius: 10px;         
+        }
+        QScrollBar:vertical {
+            border: none;               
+            background: #2b5378;        
+            width: 10px;                
+            border-radius: 10px;
+        }
+        QScrollBar::handle:vertical {
+            background: #149dfb;        
+            border-radius: 5px;         
+        }
+        QScrollBar::add-line:vertical {
+            height: 0;
+        }
+        QScrollBar::sub-line:vertical {
+            height: 0;
+        }
+        """
+        scroll_area.setStyleSheet(scroll_area_style)
 
         self.setLayout(layout)
+
+    def copy_text_to_clipboard(self, text):
+        pyperclip.copy(text)
+        print(f"Текст успешно скопирован в буфер обмена: {text}")
+        send_notification("Скопировано", "Подборка успешно скопирована в буфер обмена!")
+
+    def download_passwords(self):
+        # Открываем диалоговое окно сохранения файла
+        file_name, _ = QFileDialog.getSaveFileName(self, "Сохранить файл", "", "Текстовый файл (*.txt);;Все файлы (*)")
+
+        # Если пользователь выбрал файл для сохранения
+        if file_name:
+            try:
+                # Открываем выбранный файл для записи
+                with open(file_name, "w") as file:
+                    # Записываем каждый пароль и связанные с ним данные в файл
+                    for password_data in self.passwords_and_data:
+                        file.write(f"Сервис: {password_data['service']}\n")
+                        file.write(f"Пароль: {password_data['password']}\n")
+                        file.write(f"Почта: {password_data['email']}\n")
+                        file.write(f"Логин: {password_data['login']}\n\n")
+                print("Файл успешно сохранен.")
+            except Exception as e:
+                print(f"Ошибка при сохранении файла: {e}")
 
 
 # PasswordGeneratorApp(QWidget): Главное окно приложения, в котором пользователь может настроить и генерировать пароли.
@@ -715,25 +812,6 @@ class PasswordGeneratorApp(QWidget):
             lambda: console_button.setStyleSheet(console_button_style_released))
         console_button.clicked.connect(self.start_console)
 
-        # Вместо кнопки для смены темы используем выпадающий список
-        theme_combobox = QComboBox(dialog)
-        theme_combobox.addItem("Темная тема")
-        theme_combobox.addItem("Светлая тема")
-        theme_combobox.currentIndexChanged.connect(self.toggle_theme)
-        theme_combobox.setStyleSheet("""
-            text-decoration: none; 
-            border: none; 
-            padding: 5px 1px; 
-            font-size: 16px; 
-            background-color: #0070FF; 
-            color: #fff; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            font-family: Calibri; 
-            font-weight: 900; 
-            border: 2px solid #005CD2
-        """)
-
         # кнопка для отображения ключа шифрования в интерфейсе программы
         show_key_button = QPushButton("Ключ шифрования", dialog)
         show_key_button.setStyleSheet("""
@@ -757,7 +835,7 @@ class PasswordGeneratorApp(QWidget):
         show_key_button.released.connect(lambda: show_key_button.setStyleSheet(show_key_button_style_released))
         layout.addWidget(show_key_button)
         show_key_button.clicked.connect(self.show_encryption_key)
-        layout.addWidget(theme_combobox)
+
         layout.addWidget(console_button)
         layout.addWidget(capabilities_button)
         layout.addWidget(tips_button)
@@ -772,110 +850,6 @@ class PasswordGeneratorApp(QWidget):
 
         key_display_dialog = KeyDisplayDialog(self.encryption_key)
         key_display_dialog.exec()
-
-    def toggle_theme(self, index):
-
-        if index == 1:  # Светлая тема
-            print('Тема изменена на "Светлую"')
-            self.setStyleSheet("""
-            background-color: #f3f3f3; 
-            color: #000000; 
-            font-weight: 900;
-        """)
-            # Стили для поля "Сколько паролей сгенерировать?" (светлая тема)"
-            self.num_passwords_input.setStyleSheet("""
-            text-decoration: none; 
-            border: none; 
-            padding: 2px 1px; 
-            font-size: 14px; 
-            background-color: #96CDE9; 
-            color: #000; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            font-family: Calibri; 
-            font-weight: 900; 
-            border: 1px solid #d1d1d1
-        """)
-            # Стили для поля "Введите длину пароля" (светлая тема)"
-            self.length_input.setStyleSheet("""
-            text-decoration: none; 
-            border: none; 
-            padding: 2px 1px; 
-            font-size: 14px; 
-            background-color: #96CDE9; 
-            color: #000; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            font-family: Calibri; 
-            font-weight: 900; 
-            border: 1px solid #d1d1d1
-        """)
-            # Стили для поля "Введите слово" (светлая тема)"
-            self.word_input.setStyleSheet("""
-            text-decoration: none; 
-            border: none; 
-            padding: 2px 1px; 
-            font-size: 14px; 
-            background-color: #96CDE9; 
-            color: #000; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            font-family: Calibri; 
-            font-weight: 900; 
-            border: 1px solid #d1d1d1
-        """)
-            self.theme = "light"
-
-        elif index == 0:  # Темная тема
-            print('Тема изменена на "Тёмную"')
-            self.setStyleSheet("""
-            background-color: #0e1621; 
-            color: #FFF; 
-            font-weight: 900;
-        """)
-            # Стили для поля "Сколько паролей сгенерировать?" (темная тема)"
-            self.num_passwords_input.setStyleSheet("""
-            text-decoration: none; 
-            border: none; 
-            padding: 2px 1px; 
-            font-size: 14px; 
-            background-color: #2b5378; 
-            color: #fff; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            font-family: Calibri; 
-            font-weight: 900; 
-            border: 1px solid #507EA0
-        """)
-            # Стили для поля "Введите длину пароля" (темная тема)"
-            self.length_input.setStyleSheet("""
-            text-decoration: none; 
-            border: none; 
-            padding: 2px 1px; 
-            font-size: 14px; 
-            background-color: #2b5378; 
-            color: #fff; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            font-family: Calibri; 
-            font-weight: 900; 
-            border: 1px solid #507EA0
-        """)
-            # Стили для поля "Введите слово" (темная тема)"
-            self.word_input.setStyleSheet("""
-            text-decoration: none; 
-            border: none; 
-            padding: 2px 1px; 
-            font-size: 14px; 
-            background-color: #2b5378; 
-            color: #fff; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            font-family: Calibri; 
-            font-weight: 900; 
-            border: 1px solid #507EA0
-        """)
-            self.theme = "dark"
 
     def start_console(self):
 
