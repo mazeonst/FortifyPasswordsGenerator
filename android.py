@@ -739,7 +739,7 @@ class PasswordGeneratorApp(QWidget):
         dialog = QDialog(self)
         dialog.setWindowTitle("Настройки")
         dialog.setStyleSheet("background-color: #0e1621; border: none")
-        dialog.setFixedSize(180, 180)
+        dialog.setFixedSize(180, 160)
 
         print("Открыто диалоговое окно 'Настройки'")
 
@@ -789,29 +789,6 @@ class PasswordGeneratorApp(QWidget):
         tips_button.released.connect(lambda: tips_button.setStyleSheet(tips_button_style_released))
         tips_button.clicked.connect(self.show_tips_window)
 
-        # Кнопка отвечающая за открытие консоли
-        console_button = QPushButton("Консоль", dialog)
-        console_button.setStyleSheet("""
-            text-decoration: none; 
-            border: none; 
-            padding: 5px 1px; 
-            font-size: 16px; 
-            background-color: #0070FF; 
-            color: #fff; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            font-family: Calibri; 
-            font-weight: 900; 
-            border: 2px solid #005CD2
-        """)
-        console_button_style_pressed = "text-decoration: none; border: none; padding: 5px 1px; font-size: 16px; background-color: #0070FF; color: #fff; border-radius: 5px; cursor: pointer; font-family: Calibri; font-weight: 900; border: 2px solid #005CD2; background-color: #74C5FF;"
-        console_button_style_released = "text-decoration: none; border: none; padding: 5px 1px; font-size: 16px; background-color: #0070FF; color: #fff; border-radius: 5px; cursor: pointer; font-family: Calibri; font-weight: 900; border: 2px solid #005CD2;"
-        console_button.pressed.connect(
-            lambda: console_button.setStyleSheet(console_button_style_pressed))
-        console_button.released.connect(
-            lambda: console_button.setStyleSheet(console_button_style_released))
-        console_button.clicked.connect(self.start_console)
-
         # кнопка для отображения ключа шифрования в интерфейсе программы
         show_key_button = QPushButton("Ключ шифрования", dialog)
         show_key_button.setStyleSheet("""
@@ -836,7 +813,6 @@ class PasswordGeneratorApp(QWidget):
         layout.addWidget(show_key_button)
         show_key_button.clicked.connect(self.show_encryption_key)
 
-        layout.addWidget(console_button)
         layout.addWidget(capabilities_button)
         layout.addWidget(tips_button)
 
@@ -851,10 +827,12 @@ class PasswordGeneratorApp(QWidget):
         key_display_dialog = KeyDisplayDialog(self.encryption_key)
         key_display_dialog.exec()
 
+    """
     def start_console(self):
 
         # Запустить скрипт в новой консоли
         subprocess.Popen([sys.executable, 'test-beta-1.2.7.py'], creationflags=subprocess.CREATE_NEW_CONSOLE)
+    """
 
     def show_tips_window(self):
         dialog = QDialog(self)
@@ -871,26 +849,52 @@ class PasswordGeneratorApp(QWidget):
 
         # Используем HTML для форматирования текста
         info_text.setHtml("""
-            <html>
-            <head>
-                <style>
-                    h1 { font-size: 20px; color: #FFF; font-weight: bold; }
-                    h2 { font-size: 16px; color: #FFF; font-weight: bold; }
-                    p { font-size: 14px; color: #FFF;}
-                    p1 { font-size: 14px; color: #1f91d5;}
-                </style>
-            </head>
-            <body>
-                <h1>Советы по <p1>генерации пароля</p1></h1>
-                <h2>Общие принципы:</h2>
-                <p>1. Длину не менее <p1>8</p1> символов.</p>
-                <p>2. Различные типы символов, такие как буквы <p1>верхнего</p1> и <p1>нижнего</p1> регистра, цифры и специальные символы.</p>
-                <p>3. Не должен содержать <p1>личную информацию</p1>, такую как: <p1>имя</p1>, <p1>дату рождения</p1> или <p1>номер телефона</p1>.</p>
-                <p>4. Не должен быть <p1>очевидным</p1> или легко угадываемым, например, <p1>последовательностью чисел</p1> или <p1>букв</p1> на клавиатуре.</p>
-                <p>5. Лучше использовать <p1>фразу</p1> или <p1>комбинацию слов</p1>, которые легко запоминаются, но сложны для взлома.</p>
-                <p>6. <p1>Регулярно менять пароль</p1> и не использовать один и тот же пароль для разных аккаунтов.</p>
-            </body>
-            </html>
+<html>
+    <head>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                color: #FFF;
+                margin: 0;
+                padding: 0;
+            }
+            h1 {
+                font-size: 20px;
+                color: #1f91d5;
+                font-weight: bold;
+                text-align: center;
+                margin-top: 20px;
+            }
+            h2 {
+                font-size: 16px;
+                color: #FFF;
+                font-weight: bold;
+                margin-top: 20px;
+            }
+            p {
+                font-size: 14px;
+                color: #FFF;
+                margin-bottom: 10px;
+            }
+            p1 {
+                font-size: 14px;
+                color: #1f91d5;
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    
+    <body>
+        <h1>Советы по генерации пароля</h1>
+        <h2>Общие принципы:</h2>
+        <p>1. Длину не менее <span style="color: #1f91d5;">8</span> символов.</p>
+        <p>2. Различные типы символов, такие как буквы <span style="color: #1f91d5;">верхнего</span> и <span style="color: #1f91d5;">нижнего</span> регистра, цифры и специальные символы.</p>
+        <p>3. Не должен содержать <span style="color: #1f91d5;">личную информацию</span>, такую как: <span style="color: #1f91d5;">имя</span>, <span style="color: #1f91d5;">дату рождения</span> или <span style="color: #1f91d5;">номер телефона</span>.</p>
+        <p>4. Не должен быть <span style="color: #1f91d5;">очевидным</span> или легко угадываемым, например, <span style="color: #1f91d5;">последовательностью чисел</span> или <span style="color: #1f91d5;">букв</span> на клавиатуре.</p>
+        <p>5. Лучше использовать <span style="color: #1f91d5;">фразу</span> или <span style="color: #1f91d5;">комбинацию слов</span>, которые легко запоминаются, но сложны для взлома.</p>
+        <p>6. <span style="color: #1f91d5;">Регулярно менять пароль</span> и не использовать один и тот же пароль для разных аккаунтов.</p>
+    </body>
+</html>
         """)
 
         info_text.setGeometry(10, 10, 480, 380)
@@ -910,38 +914,81 @@ class PasswordGeneratorApp(QWidget):
 
         info_text = QTextBrowser(dialog)
         info_text.setOpenExternalLinks(True)
-        info_text.setHtml("""<
-                    <html>
+        info_text.setHtml("""
+<html>
                     <head>
                         <style>
-                            h1 { font-size: 20px; color: #FFF; font-weight: bold; }
-                            h2 { font-size: 14px; color: #FFF; font-weight: bold; }
-                            h3 { font-size: 18px; color: #FF0000; font-weight: bold; }
-                            p { font-size: 12px; }
-                            h11 { font-size: 20px; color: #1f91d5; font-weight: bold; }
-                            h22 { font-size: 14px; color: #1f91d5; font-weight: bold; }
-                            p1 { font-size: 12px; color: #1f91d5;}
-                            p2 { font-size: 12px; color: #FF0000;}
+                                body {
+                                    font-family: Arial, sans-serif;
+                                    color: #FFF;
+                                    margin: 0;
+                                    padding: 0;
+                                }
+                                h1 {
+                                    font-size: 24px;
+                                    color: #1f91d5;
+                                    font-weight: bold;
+                                    text-align: center;
+                                    margin-top: 20px;
+                                }
+                                h2 {
+                                    font-size: 18px;
+                                    color: #1f91d5;
+                                    font-weight: bold;
+                                    margin-top: 20px;
+                                }
+                                h3 {
+                                    font-size: 16px;
+                                    color: #FF0000;
+                                    font-weight: bold;
+                                    margin-top: 15px;
+                                }
+                                p {
+                                    font-size: 14px;
+                                    margin-bottom: 10px;
+                                }
+                                p1 {
+                                    color: #1f91d5;
+                                    font-weight: bold;
+                                }
+                                center {
+                                    display: block;
+                                    margin-top: 20px;
+                                    color: #888;
+                                    font-size: 12px;
+                                }
                         </style>
                     </head>
+                    
+                    
                     <body>
-                        <h1>Возможности <h11>Fortify Pass</h11></h1>
-                        <h2>1. Генерация сразу <h22>нескольких паролей.</h22></h2>
-                        <h2>2. Генерация пароля <h22>заданной пользователем длины.</h22></h2>
-                        <h2>3. Интеграция в пароль своих <h22>фраз, слов.</h22></h2>
-                        <h2>4. Использование разных <h22>опций</h22> для генерации пароля, таких как:</h2>
-                        <p>1. Добавление <p1>цифр</p1> в пароль.</p>
-                        <p>2. Добавление <p1>специальных символов</p1> в пароль.</p>
-                        <p>3. Возможность выбора генерации символов <p1>разного регистра</p1>.</p>
-                        <h2>Так же <h22>"FortifyPass"</h22> умеет шифровать пароль, благодаря такой библиотеке, как <h22>"cryptography.fernet"</h22></h2>
-                        <p>1. При запуске программы автоматически загружается ключ шифрования в файл <p1>"encryption_key.key"</p1></p>
-                        <h3><b>ВНИМАНИЕ!
-КЛЮЧ ШИФРОВАНИЯ ВАЖНО СОХРАНИТЬ В ОТДЕЛЬНЫЙ ИСТОЧНИК ИНАЧЕ ЕСТЬ ВЕРОЯТНОСТЬ ПОТЕРИ ВСЕХ ЗАШИФРОВАННЫХ ДАННЫХ!</b></h3>
-                        <p>2. В окне <p1>"пароль и данные"</p1> есть кнопка <p1>"зашифровать"</p1> после нажатия которой, пароль шифруется и записывается в файл <p1>"passwords.txt"</p1>. 
-                        <p>3. На главном экране программы имеется кнопка <p1>"Расшифровать"</p1> после ее нажатия открывается окно <p1>"Расшифровать пароль"</p1> в котором благодаря ранее сохраненному ключу шифрования вы можете расшифровать данные</p>
-                        <p><center>©Michael Mirmikov</center></p>
+                            <h1>Возможности Fortify Pass</h1>
+                            <h2>1. Генерация сразу нескольких паролей</h2>
+                            <p>Fortify Pass обеспечивает возможность создания не только одного, но и нескольких уникальных паролей за один раз. Это особенно удобно, когда требуется сгенерировать набор паролей для различных учетных записей или сервисов.</p>
+                            <h2>2. Генерация пароля заданной пользователем длины</h2>
+                            <p>Пользователи могут определять длину создаваемого пароля, чтобы удовлетворить требования конкретных систем безопасности или собственные предпочтения.</p>
+                            <h2>3. Интеграция в пароль своих фраз, слов</h2>
+                            <p>Fortify Pass позволяет включать в генерируемые пароли собственные слова или фразы, делая их более запоминающимися и персонализированными.</p>
+                            <h2>4. Использование разных опций для генерации пароля</h2>
+                            <p>Программа предоставляет разнообразные опции для настройки генерации паролей:</p>
+                            <ul>
+                                <li>Добавление цифр в пароль.</li>
+                                <li>Добавление специальных символов в пароль.</li>
+                                <li>Выбор генерации символов разного регистра.</li>
+                            </ul>
+                            <h2>Шифрование паролей</h2>
+                            <p>Fortify Pass также предлагает функционал по шифрованию паролей, используя библиотеку "cryptography.fernet".</p>
+                            <ol>
+                                <li>При запуске программы автоматически загружается ключ шифрования в файл "encryption_key.key".</li>
+                                <li>На главном экране программы доступна кнопка "Зашифровать", которая позволяет пользователям шифровать пароли и записывать их в файл "passwords.txt".</li>
+                                <li>Также имеется функция "Расшифровать", которая открывает окно для расшифровки пароля, используя сохраненный ключ шифрования.</li>
+                            </ol>
+                            <h3>Внимание!</h3>
+                            <p>Необходимо обеспечить сохранность ключа шифрования, чтобы избежать потери доступа к зашифрованным данным.</p>
+                            <center>© Michael Mirmikov</center>
                     </body>
-                    </html>
+                    
+</html>
                 """)
         info_text.setGeometry(10, 10, 680, 560)
 
