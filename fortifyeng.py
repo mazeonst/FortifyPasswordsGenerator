@@ -14,30 +14,23 @@ from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QLineEdi
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
 from cryptography.fernet import Fernet
-from win10toast import ToastNotifier
-import subprocess
-
-# уведомления
-toast = ToastNotifier()
-
+from plyer import notification
 
 # Функция для отправки уведомления
-def send_notification(title, message):
+def send_notification(title, message, app_name, app_icon):
     '''
     Функция для отправки уведомления через центр уведомлений Windows
     :param title: Заголовок уведомления
     :param message: Тело сообщения
-    :param duration: Продолжительность видимости сообщения
-    :param threaded: Этот параметр позволяет отображать уведомление справа
     '''
 
-    toast.show_toast(
+    notification.notify(
         title=title,
-        msg=message,
-        duration=5,
-        threaded=True  # Этот параметр позволяет отображать уведомление справа
+        message=message,
+        app_name=app_name,  # Название вашего приложения
+        app_icon=app_icon,  # Иконка приложения (если нужно)
+        timeout=5  # Продолжительность отображения уведомления (в секундах)
     )
-
 
 def generate_password(length, use_numbers=False, use_special_chars=False, use_uppercase=True, use_lowercase=True,
                       user_word=""):
@@ -204,8 +197,7 @@ class PasswordDialog(QDialog):
         self.is_encrypted = True  # Установите флаг после успешного шифрования
         print("The password has been successfully encrypted and updated.")
         # Отправляем уведомление
-        send_notification("The password is encrypted", "Password successfully encrypted!")
-
+        notification.notify("The password is encrypted", "Password successfully encrypted!", "Fortify", "icon.ico")
     def copy_password(self):
         """
         Метод для копирования пароля в буфер обмена и отправки уведомления.
@@ -215,8 +207,7 @@ class PasswordDialog(QDialog):
         print(f"The password has been successfully copied to the clipboard: {password}")
 
         # Отправляем уведомление
-        send_notification("Copied", "Password successfully copied to clipboard!")
-
+        notification.notify("Copied", "Password successfully copied to clipboard!", "Fortify", "icon.ico")
     # def save_password(self)Ж: позволяет пользователю ввести данные для сохранения пароля в текстовый документ
     def save_password(self):
         """
@@ -241,8 +232,7 @@ class PasswordDialog(QDialog):
             self.password_data["email"] = email_name
             print(f"Password for the service {email_name} has been saved.")
             # Отправляем уведомление
-            send_notification("Data saved", "Password successfully saved!")
-
+            notification.notify("Data saved", "Password successfully saved!", "Fortify", "icon.ico")
 
 # KeyDisplayDialog(QDialog): Диалоговое окно для отображения ключа шифрования
 class KeyDisplayDialog(QDialog):
@@ -389,7 +379,7 @@ class PasswordSaveDialog(QDialog):
     def copy_text_to_clipboard(self, text):
         pyperclip.copy(text)
         print(f"The text has been successfully copied to the clipboard: {text}")
-        send_notification("Copied", "The selection has been successfully copied to the clipboard!")
+        notification.notify("Copied", "The selection has been successfully copied to the clipboard!", "Fortify", "icon.ico")
 
     def download_passwords(self):
         # Открываем диалоговое окно сохранения файла
@@ -735,7 +725,7 @@ class PasswordGeneratorApp(QWidget):
         dialog = QDialog(self)
         dialog.setWindowTitle("Settings")
         dialog.setStyleSheet("background-color: #0e1621; border: none")
-        dialog.setFixedSize(180, 160)
+        dialog.setFixedSize(180, 140)
 
         print("The 'Settings' dialog box is open")
 
